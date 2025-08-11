@@ -79,11 +79,10 @@ To record this, we would use a **Journal Entry**:
 * **Debit** the `Equipment` account by $1,500 (Assets increase with a Debit).
 * **Credit** the `Cash` account by $1,500 (Assets decrease with a Credit).
 
-### Journal Entry for Buying a Laptop
+### Journal Entry for buying a Laptop
 
 | Account | Debit | Credit |
 |---|---|---|
 | Equipment | $1,500 | |
 | Cash | | $1,500 |
 | **Total** | **$1,500** | **$1,500** |
-
