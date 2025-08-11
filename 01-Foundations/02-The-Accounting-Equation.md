@@ -72,4 +72,4 @@ Let's check the new state of the equation based on this transaction:
 
 `$10,000 = $10,000`
 
-The equation remains perfectly balanced. This demonstrates how transactions flow through the system, always maintaining a state of equilibrium, regard of which accounts are affected. As we build our database, every transaction we record will be designed to uphold this mathematical truth.
+The equation remains perfectly balanced. This demonstrates how transactions flow through the system, always maintaining a state of equilibrium, regardl of which accounts are affected. As we build our database, every transaction we record will be designed to uphold this mathematical truth.
