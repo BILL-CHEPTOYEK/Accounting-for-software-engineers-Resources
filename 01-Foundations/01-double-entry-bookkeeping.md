@@ -62,3 +62,4 @@ To record this, we would use a **Journal Entry**:
 | Equipment |	$1,500	| 0 |
 | Cash	|    0    | $1,500 |
 | Total	| $1,500 |	$1,500 |
+
