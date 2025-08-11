@@ -49,7 +49,7 @@ The accounting universe is organized into five core categories. Understanding th
 Think of it like a scale. Debits go on the left, and credits go on the right.
 
 #### Debits(dr)
-assets, expenses
+INCREASE(assets, expenses)
 
 #### Credits(cr)
 Liabilities, revenue, equity
