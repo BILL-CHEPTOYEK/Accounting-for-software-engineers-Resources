@@ -22,6 +22,8 @@ Instead of just recording one side of the story (e.g., "I spent $500"), you reco
 
 Forget what you think you know about debits and credits from your personal bank statement. In accounting, they don't mean "minus" or "plus." They are simply two sides of a transaction, a way of categorizing the change.
 
+
+
 Think of it like a scale. Debits go on the left, and credits go on the right.
 
 | Debit (DR) | Credit (CR) |
