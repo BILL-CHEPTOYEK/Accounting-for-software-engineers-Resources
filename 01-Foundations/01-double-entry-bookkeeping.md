@@ -58,3 +58,7 @@ To record this, we would use a **Journal Entry**:
 * **Credit** the `Cash` account by $1,500 (Assets decrease with a Credit).
 
 #### Journal Entry for buying a laptop
+| Account | Debit	| Credit
+Equipment |	$1,500	
+Cash		$1,500
+Total	$1,500	$1,500
