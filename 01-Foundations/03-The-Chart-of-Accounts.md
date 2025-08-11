@@ -26,7 +26,7 @@ Here’s a simple example of this hierarchy:
     * **1100: Current Assets** (Child of 1000)
         * 1101: Cash (Child of 1100)
         * 1102: Accounts Receivable (Child of 1100)
-    * **1200: Fixed As** (Child of 1000)
+    * **1200: Fixed Ass** (Child of 1000)
         * 1201: Equipment (Child of 1200)
 
 This organized structure makes it easy to navigate the data and build a flexible system.
