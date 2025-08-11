@@ -38,6 +38,7 @@ assets, expenses
 #### Credits(cr)
 
 
+
 The key takeaway here is the **Normal Balance**. If an account type's normal balance is `DR`, a debit will increase its value. Conversely, a credit will decrease it.
 
 ---
