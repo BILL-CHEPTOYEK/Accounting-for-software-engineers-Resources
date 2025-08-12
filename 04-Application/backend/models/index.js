@@ -3,7 +3,6 @@
 const sequelize = require('../config/database');
 const Party = require('./party');
 const Invoice = require('./invoice');
-const Bill = require('./bill');
 const AccountType = require('./accountType');
 const ChartOfAccount = require('./chartOfAccount');
 const Transaction = require('./transaction'); 
@@ -13,7 +12,6 @@ const db = {};
 db.sequelize = sequelize;
 db.Party = Party;
 db.Invoice = Invoice;
-db.Bill = Bill;
 db.AccountType = AccountType;
 db.ChartOfAccount = ChartOfAccount;
 db.Transaction = Transaction; 
@@ -27,16 +25,7 @@ db.Party.hasMany(db.Invoice, {
 });
 db.Invoice.belongsTo(db.Party, {
   foreignKey: 'party_id',
-  as: 'customer',
-});
-
-db.Party.hasMany(db.Bill, {
-  foreignKey: 'party_id',
-  as: 'bills',
-});
-db.Bill.belongsTo(db.Party, {
-  foreignKey: 'party_id',
-  as: 'issuer',
+  as: 'party',
 });
 
 // Chart of Accounts associations

@@ -14,7 +14,7 @@ const Party = sequelize.define('Party', {
     allowNull: false,
   },
   party_type: {
-    type: DataTypes.ENUM('Customer', 'Supplier', 'Employee', 'Other'),
+    type: DataTypes.ENUM('Customer', 'Supplier'),
     allowNull: false,
   },
   contact_info: {

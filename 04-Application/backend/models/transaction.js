@@ -9,6 +9,14 @@ const Transaction = sequelize.define('Transaction', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
+  transaction_no: {
+    type: DataTypes.STRING(50),
+    allowNull: false,
+  },
+  transaction_type: {
+    type: DataTypes.STRING(10),
+    allowNull: false,
+  },
   account_id: {
     type: DataTypes.UUID,
     allowNull: false,
@@ -16,6 +24,10 @@ const Transaction = sequelize.define('Transaction', {
       model: 'chart_of_accounts',
       key: 'account_id',
     },
+  },
+  amount: {
+    type: DataTypes.DECIMAL(15, 2),
+    allowNull: false,
   },
   date: {
     type: DataTypes.DATEONLY,
@@ -49,6 +61,22 @@ const Transaction = sequelize.define('Transaction', {
       key: 'transaction_id',
     },
     allowNull: true,
+  },
+  branch_id: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: 'branches',
+      key: 'branch_id',
+    },
+  },
+  addedby: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: 'users',
+      key: 'user_id',
+    },
   },
 }, {
   tableName: 'transactions',

@@ -14,8 +14,9 @@ const AccountType = sequelize.define('AccountType', {
     allowNull: false,
     unique: true,
   },
-  description: {
-    type: DataTypes.TEXT,
+  category: {
+    type: DataTypes.STRING(50),
+    allowNull: false,
   },
   normal_balance: {
     type: DataTypes.ENUM('DR', 'CR'),
