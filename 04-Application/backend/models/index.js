@@ -5,7 +5,9 @@ const Party = require('./party');
 const Invoice = require('./invoice');
 const AccountType = require('./accountType');
 const ChartOfAccount = require('./chartOfAccount');
-const Transaction = require('./transaction'); 
+const Transaction = require('./transaction');
+const User = require('./user'); 
+const Branch = require('./branch'); 
 
 const db = {};
 
@@ -14,7 +16,9 @@ db.Party = Party;
 db.Invoice = Invoice;
 db.AccountType = AccountType;
 db.ChartOfAccount = ChartOfAccount;
-db.Transaction = Transaction; 
+db.Transaction = Transaction;
+db.User = User;    
+db.Branch = Branch; 
 
 // Define Associations
 
@@ -61,7 +65,33 @@ db.Transaction.belongsTo(db.ChartOfAccount, {
 // Self-referencing association for transaction reversals
 db.Transaction.hasOne(db.Transaction, {
   foreignKey: 'reversal_of_transaction_id',
-  as: 'reversedTransaction',
+  as: 'reversedTransaction', 
 });
+db.Transaction.hasMany(db.Transaction, {
+  foreignKey: 'reversal_of_transaction_id',
+  as: 'reversingTransactions', // Transactions that reverse THIS transaction
+  sourceKey: 'transaction_id',
+});
+
+
+// User and Branch associations for Transaction
+db.User.hasMany(db.Transaction, {
+  foreignKey: 'addedby',
+  as: 'createdTransactions',
+});
+db.Transaction.belongsTo(db.User, {
+  foreignKey: 'addedby',
+  as: 'createdBy',
+});
+
+db.Branch.hasMany(db.Transaction, {
+  foreignKey: 'branch_id',
+  as: 'branchTransactions',
+});
+db.Transaction.belongsTo(db.Branch, {
+  foreignKey: 'branch_id',
+  as: 'branch',
+});
+
 
 module.exports = db;

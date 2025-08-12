@@ -18,7 +18,7 @@ const Invoice = sequelize.define('Invoice', {
     },
   },
   type: {
-    type: DataTypes.ENUM('Invoice', 'Bill'),
+    type: DataTypes.ENUM('Pro forma', 'Commercial', 'Quotation'),
     allowNull: false,
   },
   document_no: { 

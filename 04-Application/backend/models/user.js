@@ -1,39 +1,48 @@
-// /04-Application/backend/models/party.js
+// /04-Application/backend/models/user.js
 
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-const Party = sequelize.define('Party', {
-  party_id: {
+const User = sequelize.define('User', {
+  user_id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
   first_name: {
     type: DataTypes.STRING(255),
-    allowNull: false,
+    allowNull: true,
   },
   last_name: {
     type: DataTypes.STRING(255),
+    allowNull: true,
+  },
+  email: {
+    type: DataTypes.STRING(255),
+    allowNull: false,
+    unique: true,
+    validate: {
+      isEmail: true,
+    },
+  },
+  password_hash: { 
+    type: DataTypes.STRING(255),
     allowNull: false,
   },
-  party_type: {
-    type: DataTypes.ENUM('Customer', 'Supplier'),
+  role: {
+    type: DataTypes.ENUM('Admin', 'Accountant', 'Employee'), 
+    defaultValue: 'Employee',
     allowNull: false,
-  },
-  contact_info: {
-    type: DataTypes.JSONB,
-    allowNull: true, 
   },
   is_active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
 }, {
-  tableName: 'parties',
+  tableName: 'users',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',
 });
 
-module.exports = Party;
+module.exports = User;

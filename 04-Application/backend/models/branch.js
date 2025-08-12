@@ -1,39 +1,40 @@
-// /04-Application/backend/models/party.js
+// /04-Application/backend/models/branch.js
 
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-const Party = sequelize.define('Party', {
-  party_id: {
+const Branch = sequelize.define('Branch', {
+  branch_id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
-  first_name: {
+  name: {
     type: DataTypes.STRING(255),
     allowNull: false,
+    unique: true,
   },
-  last_name: {
+  address: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  contact_person: {
     type: DataTypes.STRING(255),
-    allowNull: false,
+    allowNull: true,
   },
-  party_type: {
-    type: DataTypes.ENUM('Customer', 'Supplier'),
-    allowNull: false,
-  },
-  contact_info: {
-    type: DataTypes.JSONB,
-    allowNull: true, 
+  phone_number: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
   },
   is_active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
 }, {
-  tableName: 'parties',
+  tableName: 'branches',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',
 });
 
-module.exports = Party;
+module.exports = Branch;
