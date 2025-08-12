@@ -2,15 +2,12 @@
 
 const db = require('../models');
 const User = db.User;
-const bcrypt = require('bcryptjs'); // For password hashing
-
-// NOTE: You'll need to install bcryptjs: npm install bcryptjs
-
+const bcrypt = require('bcryptjs');
 // Get all users
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll({
-      attributes: { exclude: ['password_hash'] } // Exclude password hash from response
+      attributes: { exclude: ['password_hash'] }
     });
     res.status(200).json(users);
   } catch (error) {
@@ -23,7 +20,7 @@ exports.getAllUsers = async (req, res) => {
 exports.getUserById = async (req, res) => {
   try {
     const user = await User.findByPk(req.params.user_id, {
-      attributes: { exclude: ['password_hash'] } // Exclude password hash from response
+      attributes: { exclude: ['password_hash'] }
     });
     if (user) {
       res.status(200).json(user);
@@ -79,11 +76,10 @@ exports.updateUser = async (req, res) => {
     const { password } = req.body;
     const updateData = { ...req.body };
 
-    // If password is provided, hash it before updating
     if (password) {
       const salt = await bcrypt.genSalt(10);
       updateData.password_hash = await bcrypt.hash(password, salt);
-      delete updateData.password; // Remove plain password from update data
+      delete updateData.password; 
     }
 
     const [updated] = await User.update(updateData, {
@@ -123,7 +119,6 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-// User login (basic example - authentication will be built upon this)
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -140,8 +135,7 @@ exports.loginUser = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid credentials.' });
     }
-
-    // Login successful - in a real app, you'd generate a JWT token here
+    // jwt later
     const userResponse = user.toJSON();
     delete userResponse.password_hash;
     res.status(200).json({ message: 'Login successful', user: userResponse });
