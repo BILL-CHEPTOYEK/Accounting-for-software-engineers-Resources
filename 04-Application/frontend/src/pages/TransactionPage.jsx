@@ -51,7 +51,16 @@ function TransactionPage({ setCurrentPage }) { // Receive setCurrentPage for nav
 
   // Handlers for opening/closing modals and operations
   const handleRecordNewJournalEntry = () => {
-    setCurrentPage('recordJournalEntry'); // Navigate to the new page
+    setCurrentPage('recordJournalEntry', null); // Navigate to new page, no transaction data
+  };
+
+  const handleEditTransaction = (transaction) => {
+    // IMPORTANT: Only allow editing if the transaction line is NOT posted
+    if (transaction.is_posted) {
+      alert('Cannot directly edit a posted transaction line. Please use the "Reverse Journal Entry" option for corrections to the entire journal entry.');
+      return;
+    }
+    setCurrentPage('recordJournalEntry', transaction); // Navigate to the record page with transaction data for editing
   };
 
   const handleViewDetails = (transactionNo) => { // Now expects transaction_no
@@ -93,6 +102,7 @@ function TransactionPage({ setCurrentPage }) { // Receive setCurrentPage for nav
         transactions={transactions}
         loading={loading}
         error={error}
+        onEdit={handleEditTransaction} // Re-added onEdit prop
         onViewDetails={handleViewDetails} // Now passes transaction_no
         onReverseJournalEntry={handleReverseJournalEntry}
         accounts={accounts} // Pass accounts to list for display
