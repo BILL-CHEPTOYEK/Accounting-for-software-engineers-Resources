@@ -72,6 +72,9 @@ function TransactionList({ transactions, loading, error, onEdit, onViewDetails, 
             const addedByUser = users.find(u => u.user_id === firstLine.addedby);
             const branch = branches.find(b => b.branch_id === firstLine.branch_id);
 
+            // Determine if the *entire journal entry* is posted (check if at least one line is posted)
+            const isJournalEntryPosted = entryLines.some(line => line.is_posted);
+
             return (
               <React.Fragment key={transactionNo}>
                 {/* Main Journal Entry Row */}
@@ -84,49 +87,66 @@ function TransactionList({ transactions, loading, error, onEdit, onViewDetails, 
                   <td className="text-end text-danger">${totalDebits.toFixed(2)}</td>
                   <td className="text-end text-success">${totalCredits.toFixed(2)}</td>
                   <td className="text-center">
+                    {/* View Details button for the entire JE */}
                     <button
-                      className="btn btn-sm btn-outline-danger"
-                      onClick={() => onReverseJournalEntry(transactionNo)}
-                      title="Reverse Journal Entry"
+                        className="btn btn-sm btn-outline-info me-2"
+                        onClick={() => onViewDetails(transactionNo)} // Pass transactionNo
+                        title="View Journal Entry Details"
                     >
-                      <i className="bi bi-arrow-counterclockwise"></i> Reverse JE
+                        <i className="bi bi-eye"></i> Details
                     </button>
+                    {/* Reverse JE button - always available for a posted JE */}
+                    {isJournalEntryPosted && (
+                      <button
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => onReverseJournalEntry(transactionNo)}
+                        title="Reverse Journal Entry"
+                      >
+                        <i className="bi bi-arrow-counterclockwise"></i> Reverse JE
+                      </button>
+                    )}
+                    {/* Conditional Delete button for UNPOSTED JE (e.g., drafts) */}
+                    {!isJournalEntryPosted && (
+                        <button
+                            className="btn btn-sm btn-outline-dark"
+                            onClick={() => {
+                                // Implement deletion logic for unposted JE here if needed
+                                // (e.g., prompt for confirmation, then call transactionApi.deleteTransaction for all lines with this JE number)
+                                alert('Deletion of unposted Journal Entry will be implemented here. For now, contact admin.');
+                            }}
+                            title="Delete Unposted Journal Entry"
+                        >
+                            <i className="bi bi-trash"></i> Delete JE
+                        </button>
+                    )}
                   </td>
                 </tr>
-                {/* Individual Transaction Lines (Collapsible or just listed) */}
-                {/* For simplicity, we'll just list them as sub-rows. For large entries, a collapsible section would be better. */}
+                {/* Individual Transaction Lines (listed as sub-rows) */}
                 {entryLines.map((line, lineIndex) => {
                   const account = accounts.find(acc => acc.account_id === line.account_id);
                   return (
                     <tr key={line.transaction_id} className="small text-muted">
                       <td></td> {/* Empty for alignment */}
                       <td></td>
-                      <td colSpan="1">
+                      <td colSpan="1" className="ps-4">
                         &mdash; {account ? account.name : 'N/A'}
                         {line.reference_no && ` (Ref: ${line.reference_no})`}
                       </td>
                       <td></td> {/* Empty */}
                       <td></td> {/* Empty */}
-                      <td className="text-end text-danger">{line.debit > 0 ? `$${parseFloat(line.debit).toFixed(2)}` : '-'}</td>
-                      <td className="text-end text-success">{line.credit > 0 ? `$${parseFloat(line.credit).toFixed(2)}` : '-'}</td>
+                      <td className="text-end text-danger">{parseFloat(line.debit) > 0 ? `$${parseFloat(line.debit).toFixed(2)}` : '-'}</td>
+                      <td className="text-end text-success">{parseFloat(line.credit) > 0 ? `$${parseFloat(line.credit).toFixed(2)}` : '-'}</td>
                       <td className="text-center">
-                        {/* Actions for individual lines */}
-                        <button
-                            className="btn btn-sm btn-outline-info me-1"
-                            onClick={() => onViewDetails(line)}
-                            title="View Line Details"
-                        >
-                            <i className="bi bi-eye"></i>
-                        </button>
-                        {!line.is_posted && ( // Only allow edit if not posted
-                            <button
-                                className="btn btn-sm btn-outline-secondary"
-                                onClick={() => onEdit(line)}
-                                title="Edit Line (Unposted)"
-                            >
-                                <i className="bi bi-pencil"></i>
-                            </button>
-                        )}
+                         {/* Edit button for individual lines, only if NOT POSTED */}
+                         {!line.is_posted && (
+                             <button
+                                 className="btn btn-sm btn-outline-secondary"
+                                 onClick={() => onEdit(line)} // Pass the specific line for editing
+                                 title="Edit This Transaction Line"
+                             >
+                                 <i className="bi bi-pencil"></i> Edit Line
+                             </button>
+                         )}
                       </td>
                     </tr>
                   );
