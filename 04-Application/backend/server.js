@@ -3,10 +3,14 @@
 const db = require('./models');
 const express = require('express');
 const app = express();
+const cors = require('cors');
 const PORT = process.env.PORT || 3000;
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+
+// Enable CORS for all routes
+app.use(cors());
 
 // --- Database Synchronization ---
 db.sequelize.sync({ alter: true })
