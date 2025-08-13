@@ -1,7 +1,7 @@
 // /04-Application/backend/frontend/src/pages/BranchPage.jsx
 
 import React from 'react';
-
+    
 function BranchPage() {
   return (
     <div className="container py-4">
