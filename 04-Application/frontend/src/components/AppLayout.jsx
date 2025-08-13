@@ -120,12 +120,12 @@ function AppLayout() {
       {/* Right-side container: flex column to stack main content and footer */}
       <div className="d-flex flex-column flex-grow-1">
         {/* Main Content Area - flex-grow-1 ensures it takes available space, overflow-auto for internal scrolling */}
-        <main className="flex-grow-1 p-4 p-md-5 bg-white shadow-sm rounded-lg m-3 overflow-auto">
+        <main className="flex-grow-1 p-3 p-md-5 bg-white shadow-sm rounded-lg m-3 overflow-auto">
           {renderPage()}
         </main>
 
         {/* Footer Section - pushed to the bottom by flex-grow-1 on main */}
-        <footer className="w-100 text-center text-muted small py-3">
+        <footer className="w-100 text-center text-muted small py-9 bg-light">
           <p>&copy; {new Date().getFullYear()} Accounting System. All rights reserved.</p>
         </footer>
       </div>
