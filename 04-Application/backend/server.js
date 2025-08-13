@@ -46,7 +46,6 @@ app.use('/api/users', userRoutes);
 const transactionRoutes = require('./routes/transactionRoutes');
 app.use('/api/transactions', transactionRoutes);
 
-// Optional: Basic welcome route
 app.get('/', (req, res) => {
   res.send('Welcome to the Accounting System API. API endpoints are ready! 😊');
 });
