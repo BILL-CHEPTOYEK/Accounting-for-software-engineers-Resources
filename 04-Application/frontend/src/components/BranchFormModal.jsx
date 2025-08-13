@@ -49,6 +49,17 @@ function BranchFormModal({ show, onClose, onSubmit, branch }) {
     if (!formData.name.trim()) {
       newErrors.name = 'Branch Name is required.';
     }
+    if (!formData.address.trim()) { 
+      newErrors.address = 'Address is required.';
+    }
+    if (!formData.contact_person.trim()) { 
+      newErrors.contact_person = 'Contact Person is required.';
+    }
+    if (!formData.phone_number.trim()) {
+      newErrors.phone_number = 'Phone Number is required.';
+    } else if (formData.phone_number.trim().length < 5) {
+      newErrors.phone_number = 'Phone Number seems too short. Please enter a valid number.';
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -89,7 +100,7 @@ function BranchFormModal({ show, onClose, onSubmit, branch }) {
               <div className="mb-3">
                 <label htmlFor="address" className="form-label">Address</label>
                 <textarea
-                  className="form-control"
+                  className={`form-control ${errors.address ? 'is-invalid' : ''}`}
                   id="address"
                   name="address"
                   rows="2"
@@ -97,30 +108,33 @@ function BranchFormModal({ show, onClose, onSubmit, branch }) {
                   onChange={handleChange}
                   placeholder="e.g., 123 Main St, City, Country"
                 ></textarea>
+                {errors.address && <div className="invalid-feedback">{errors.address}</div>} 
               </div>
               <div className="mb-3">
                 <label htmlFor="contact_person" className="form-label">Contact Person</label>
                 <input
                   type="text"
-                  className="form-control"
+                  className={`form-control ${errors.contact_person ? 'is-invalid' : ''}`}
                   id="contact_person"
                   name="contact_person"
                   value={formData.contact_person}
                   onChange={handleChange}
                   placeholder="e.g., Jane Doe"
                 />
+                {errors.contact_person && <div className="invalid-feedback">{errors.contact_person}</div>} {/* Error feedback */}
               </div>
               <div className="mb-3">
                 <label htmlFor="phone_number" className="form-label">Phone Number</label>
                 <input
                   type="text"
-                  className="form-control"
+                  className={`form-control ${errors.phone_number ? 'is-invalid' : ''}`}
                   id="phone_number"
                   name="phone_number"
                   value={formData.phone_number}
                   onChange={handleChange}
                   placeholder="e.g., +1234567890"
                 />
+                {errors.phone_number && <div className="invalid-feedback">{errors.phone_number}</div>}
               </div>
               <div className="form-check mb-3">
                 <input
