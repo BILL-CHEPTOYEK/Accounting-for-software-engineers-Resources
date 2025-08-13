@@ -1,160 +1,133 @@
-// /04-Application/backend/frontend/src/pages/AccountTypePage.jsx
+// /04-Application/backend/frontend/src/components/AccountTypeFormModal.jsx
 
 import React, { useState, useEffect } from 'react';
-import { accountTypeApi } from '../services/api'; 
 
-import AccountTypeFormModal from '../components/AccountTypeFormModal';
+function AccountTypeFormModal({ show, onClose, onSubmit, accountType }) {
+  // Initial state for the form, setting defaults or pre-filling for edit
+  const [formData, setFormData] = useState({
+    name: '',
+    category: '',
+    normal_balance: '', // 'DR' or 'CR'
+  });
+  const [errors, setErrors] = useState({});
 
-function AccountTypePage() {
-  const [accountTypes, setAccountTypes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [currentAccountType, setCurrentAccountType] = useState(null); // For editing
-
-  // Fetch all account types
-  const fetchAccountTypes = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await accountTypeApi.getAllAccountTypes();
-      setAccountTypes(response.data);
-    } catch (err) {
-      console.error('Failed to fetch account types:', err);
-      setError('Failed to load account types. Please check your backend connection.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Effect to populate form data when 'accountType' prop changes (for editing)
   useEffect(() => {
-    fetchAccountTypes();
-  }, []);
+    if (accountType) {
+      setFormData({
+        name: accountType.name || '',
+        category: accountType.category || '',
+        normal_balance: accountType.normal_balance || '',
+      });
+    } else {
+      // Reset form for adding new if no accountType is provided
+      setFormData({
+        name: '',
+        category: '',
+        normal_balance: '',
+      });
+    }
+    setErrors({}); // Clear errors when modal opens or accountType changes
+  }, [accountType, show]); // Depend on show to reset when modal visibility changes
 
-  // Handler for adding a new account type
-  const handleAddAccountType = () => {
-    setCurrentAccountType(null); // Clear any previous data for adding new
-    setShowModal(true);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
-  // Handler for editing an existing account type
-  const handleEditAccountType = (accountType) => {
-    setCurrentAccountType(accountType); // Set data for editing
-    setShowModal(true);
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.name.trim()) {
+      newErrors.name = 'Account Type Name is required.';
+    }
+    if (!formData.category.trim()) {
+      newErrors.category = 'Category is required.';
+    }
+    if (!formData.normal_balance) {
+      newErrors.normal_balance = 'Normal Balance is required (Debit/Credit).';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  // Handler for deleting an account type
-  const handleDeleteAccountType = async (accountTypeId) => {
-    if (window.confirm('Are you sure you want to delete this account type? This action cannot be undone and may affect existing Chart of Accounts entries.')) {
-      try {
-        await accountTypeApi.deleteAccountType(accountTypeId);
-        alert('Account Type deleted successfully!');
-        fetchAccountTypes(); // Re-fetch data to update the list
-      } catch (err) {
-        console.error('Failed to delete account type:', err);
-        setError('Failed to delete account type: ' + (err.response?.data?.error || err.message));
-        alert('Failed to delete account type: ' + (err.response?.data?.error || 'An unexpected error occurred.'));
-      }
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      onSubmit(formData);
     }
   };
 
-  // Handler for submitting the form (add or edit)
-  const handleSubmitAccountType = async (formData) => {
-    try {
-      if (currentAccountType) {
-        // Editing existing account type
-        await accountTypeApi.updateAccountType(currentAccountType.account_type_id, formData);
-        alert('Account Type updated successfully!');
-      } else {
-        // Adding new account type
-        await accountTypeApi.createAccountType(formData);
-        alert('Account Type added successfully!');
-      }
-      setShowModal(false); // Close modal
-      fetchAccountTypes(); // Re-fetch data to update the list
-    } catch (err) {
-      console.error('Failed to save account type:', err);
-      setError('Failed to save account type: ' + (err.response?.data?.error || err.message));
-      alert('Failed to save account type: ' + (err.response?.data?.error || 'An unexpected error occurred.'));
-    }
-  };
+  const modalClass = show ? 'modal fade show d-block' : 'modal fade';
+  const modalStyle = show ? { display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' } : {};
 
   return (
-    <div className="container-fluid py-4">
-      <h2 className="h3 fw-semibold text-dark mb-4 d-flex justify-content-between align-items-center">
-        <span><i className="bi bi-bar-chart-fill me-2 text-primary"></i> Manage Account Types</span>
-        <button className="btn btn-primary shadow-sm" onClick={handleAddAccountType}>
-          <i className="bi bi-plus-circle me-2"></i> Add New Account Type
-        </button>
-      </h2>
-
-      {error && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
-          <i className="bi bi-x-circle-fill me-2"></i> {error}
-          <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close" onClick={() => setError(null)}></button>
-        </div>
-      )}
-
-      {loading ? (
-        <div className="d-flex justify-content-center align-items-center py-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
+    <div className={modalClass} tabIndex="-1" role="dialog" style={modalStyle}>
+      <div className="modal-dialog modal-dialog-centered" role="document">
+        <div className="modal-content">
+          <div className="modal-header bg-primary text-white">
+            <h5 className="modal-title">{accountType ? 'Edit Account Type' : 'Add New Account Type'}</h5>
+            <button type="button" className="btn-close btn-close-white" onClick={onClose} aria-label="Close"></button>
           </div>
-          <p className="ms-3 text-primary">Loading account types...</p>
+          <form onSubmit={handleSubmit}>
+            <div className="modal-body">
+              <div className="mb-3">
+                <label htmlFor="name" className="form-label">Account Type Name</label>
+                <input
+                  type="text"
+                  className={`form-control ${errors.name ? 'is-invalid' : ''}`}
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="e.g., Current Asset, Revenue, Operating Expense"
+                />
+                {errors.name && <div className="invalid-feedback">{errors.name}</div>}
+              </div>
+              <div className="mb-3">
+                <label htmlFor="category" className="form-label">Category</label>
+                <input
+                  type="text"
+                  className={`form-control ${errors.category ? 'is-invalid' : ''}`}
+                  id="category"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  placeholder="e.g., Asset, Liability, Equity, Revenue, Expense"
+                />
+                {errors.category && <div className="invalid-feedback">{errors.category}</div>}
+              </div>
+              <div className="mb-3">
+                <label htmlFor="normal_balance" className="form-label">Normal Balance</label>
+                <select
+                  className={`form-select ${errors.normal_balance ? 'is-invalid' : ''}`}
+                  id="normal_balance"
+                  name="normal_balance"
+                  value={formData.normal_balance}
+                  onChange={handleChange}
+                >
+                  <option value="">Select Normal Balance</option>
+                  <option value="DR">Debit (DR)</option>
+                  <option value="CR">Credit (CR)</option>
+                </select>
+                {errors.normal_balance && <div className="invalid-feedback">{errors.normal_balance}</div>}
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={onClose}>
+                Cancel
+              </button>
+              <button type="submit" className="btn btn-primary">
+                {accountType ? 'Save Changes' : 'Add Account Type'}
+              </button>
+            </div>
+          </form>
         </div>
-      ) : accountTypes.length === 0 ? (
-        <div className="alert alert-info text-center" role="alert">
-          No account types found. Click "Add New Account Type" to create one.
-        </div>
-      ) : (
-        <div className="table-responsive">
-          <table className="table table-hover table-striped shadow-sm rounded-3 overflow-hidden">
-            <thead className="bg-primary text-white">
-              <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Category</th>
-                <th scope="col">Normal Balance</th>
-                <th scope="col" className="text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {accountTypes.map((type) => (
-                <tr key={type.account_type_id}>
-                  <td>{type.name}</td>
-                  <td>{type.category}</td>
-                  <td>{type.normal_balance}</td>
-                  <td className="text-center">
-                    <button
-                      className="btn btn-sm btn-outline-info me-2"
-                      onClick={() => handleEditAccountType(type)}
-                      title="Edit Account Type"
-                    >
-                      <i className="bi bi-pencil"></i> Edit
-                    </button>
-                    <button
-                      className="btn btn-sm btn-outline-danger"
-                      onClick={() => handleDeleteAccountType(type.account_type_id)}
-                      title="Delete Account Type"
-                    >
-                      <i className="bi bi-trash"></i> Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Account Type Add/Edit Modal */}
-      <AccountTypeFormModal
-        show={showModal}
-        onClose={() => setShowModal(false)}
-        onSubmit={handleSubmitAccountType}
-        accountType={currentAccountType}
-      />
+      </div>
     </div>
   );
 }
 
-export default AccountTypePage;
+export default AccountTypeFormModal;
