@@ -1,12 +1,11 @@
 // /04-Application/backend/frontend/src/components/AppLayout.jsx
 
 import React, { useState } from 'react';
-// Import page components from the new 'pages' directory
 import HomePage from '../pages/HomePage';
 import PartyPage from '../pages/PartyPage';
 import InvoicePage from '../pages/InvoicePage';
 import TransactionPage from '../pages/TransactionPage';
-import RecordJournalEntryPage from '../pages/RecordJournalEntryPage'; // NEW: Import the new page
+import RecordJournalEntryPage from '../pages/RecordJournalEntryPage'; 
 import AccountTypePage from '../pages/AccountTypePage';
 import ChartOfAccountPage from '../pages/ChartOfAccountPage';
 import BranchPage from '../pages/BranchPage';
@@ -33,7 +32,7 @@ function AppLayout() {
       case 'transactions':
         return <TransactionPage setCurrentPage={navigateToPage} />;
       case 'recordJournalEntry':
-        return <RecordJournalEntryPage setCurrentPage={navigateToPage} transactionToEdit={currentAppState.data} />; // Pass transactionToEdit
+        return <RecordJournalEntryPage setCurrentPage={navigateToPage} transactionToEdit={currentAppState.data} />; 
       case 'accountTypes':
         return <AccountTypePage />;
       case 'chartOfAccounts':
@@ -81,13 +80,13 @@ function AppLayout() {
               Transactions
             </a>
           </li>
-          {/* NEW: Link to the Record Journal Entry Page */}
+          {/* 
           <li>
             <a href="#" className={`nav-link text-white ${currentAppState.page === 'recordJournalEntry' ? 'active' : ''}`} onClick={() => navigateToPage('recordJournalEntry')}>
               <i className="bi bi-journal-plus me-2"></i>
               Record JE
             </a>
-          </li>
+          </li> */}
           <li>
             <a href="#" className={`nav-link text-white ${currentAppState.page === 'accountTypes' ? 'active' : ''}`} onClick={() => navigateToPage('accountTypes')}>
               <i className="bi bi-bar-chart-fill me-2"></i>
