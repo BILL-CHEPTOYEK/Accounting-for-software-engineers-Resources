@@ -3,11 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { transactionApi, chartOfAccountApi, userApi, branchApi } from '../services/api';
 import TransactionList from '../components/TransactionList'; // Component to display the table
-import TransactionFormModal from '../components/TransactionFormModal'; // Modal for adding/editing transactions
-import TransactionDetailModal from '../components/TransactionDetailModal'; // Modal for viewing single line details
+import TransactionDetailModal from '../components/TransactionDetailModal'; // Modal for viewing full JE details
 import ReverseTransactionModal from '../components/ReverseTransactionModal'; // Modal for reversing journal entries
 
-function TransactionPage() {
+function TransactionPage({ setCurrentPage }) { // Receive setCurrentPage for navigation
   const [transactions, setTransactions] = useState([]); // State to hold all transaction lines
   const [accounts, setAccounts] = useState([]); // For Chart of Accounts dropdown
   const [users, setUsers] = useState([]);       // For Users dropdown (addedby)
@@ -16,11 +15,8 @@ function TransactionPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [showFormModal, setShowFormModal] = useState(false); // Controls add/edit form modal visibility
-  const [currentTransactionToEdit, setCurrentTransactionToEdit] = useState(null); // For editing a single line
-
   const [showDetailModal, setShowDetailModal] = useState(false); // Controls detail modal visibility
-  const [currentTransactionToView, setCurrentTransactionToView] = useState(null); // For viewing single line details
+  const [transactionNoToView, setTransactionNoToView] = useState(null); // Holds transaction_no for detail view
 
   const [showReverseModal, setShowReverseModal] = useState(false); // Controls reversal modal visibility
   const [transactionNoToReverse, setTransactionNoToReverse] = useState(null); // Holds transaction_no for reversal
@@ -54,50 +50,18 @@ function TransactionPage() {
   }, []);
 
   // Handlers for opening/closing modals and operations
-  const handleAddTransaction = () => {
-    setCurrentTransactionToEdit(null); // Clear data for 'add' mode
-    setShowFormModal(true);
+  const handleRecordNewJournalEntry = () => {
+    setCurrentPage('recordJournalEntry'); // Navigate to the new page
   };
 
-  // Note: Editing a transaction is only allowed if it's NOT posted.
-  const handleEditTransaction = (transaction) => {
-    if (transaction.is_posted) {
-      alert('Cannot edit a posted transaction. Please use the "Reverse Journal Entry" option for corrections.');
-      return;
-    }
-    setCurrentTransactionToEdit(transaction); // Set data for 'edit' mode
-    setShowFormModal(true);
-  };
-
-  const handleViewDetails = (transaction) => {
-    setCurrentTransactionToView(transaction); // Set data for 'details' mode
+  const handleViewDetails = (transactionNo) => { // Now expects transaction_no
+    setTransactionNoToView(transactionNo);
     setShowDetailModal(true);
   };
 
   const handleReverseJournalEntry = (transactionNo) => {
     setTransactionNoToReverse(transactionNo); // Set the transaction_no to be reversed
     setShowReverseModal(true);
-  };
-
-  // Handle saving a new journal entry or updating a single transaction line
-  const handleSaveTransaction = async (data) => {
-    try {
-      if (currentTransactionToEdit) {
-        // This path is for updating a single EXISTING, UNPOSTED transaction line
-        await transactionApi.updateTransaction(currentTransactionToEdit.transaction_id, data);
-        alert('Transaction line updated successfully!');
-      } else {
-        // This path is for creating a NEW JOURNAL ENTRY (array of lines)
-        await transactionApi.createTransaction(data);
-        alert('Journal Entry created successfully!');
-      }
-      setShowFormModal(false); // Close the form modal
-      fetchData(); // Re-fetch all data to update the list and counts
-    } catch (err) {
-      console.error('Error saving transaction:', err);
-      setError('Error saving transaction: ' + (err.response?.data?.error || err.message));
-      alert('Failed to save transaction: ' + (err.response?.data?.error || 'An unexpected error occurred.'));
-    }
   };
 
   // Handle confirming and executing a journal entry reversal
@@ -109,7 +73,7 @@ function TransactionPage() {
       fetchData(); // Re-fetch all data to show the new reversal entries
     } catch (err) {
       console.error('Error reversing transaction:', err);
-      setError('Error reversing transaction: ' + (err.response?.data?.error || err.message));
+      setError('Failed to reverse transaction: ' + (err.response?.data?.error || err.message));
       alert('Failed to reverse transaction: ' + (err.response?.data?.error || 'An unexpected error occurred.'));
     }
   };
@@ -118,8 +82,8 @@ function TransactionPage() {
     <div className="container-fluid py-4">
       <h2 className="h3 fw-semibold text-dark mb-4 d-flex justify-content-between align-items-center">
         <span><i className="bi bi-wallet-fill me-2 text-success"></i> Journal Entries & Transactions</span>
-        {/* Button to open the modal for creating a new Journal Entry */}
-        <button className="btn btn-success text-white shadow-sm" onClick={handleAddTransaction}>
+        {/* Button to navigate to the new page for creating a new Journal Entry */}
+        <button className="btn btn-success text-white shadow-sm" onClick={handleRecordNewJournalEntry}>
           <i className="bi bi-plus-circle me-2"></i> Record New Journal Entry
         </button>
       </h2>
@@ -129,30 +93,19 @@ function TransactionPage() {
         transactions={transactions}
         loading={loading}
         error={error}
-        onEdit={handleEditTransaction}
-        onViewDetails={handleViewDetails}
+        onViewDetails={handleViewDetails} // Now passes transaction_no
         onReverseJournalEntry={handleReverseJournalEntry}
         accounts={accounts} // Pass accounts to list for display
         users={users}     // Pass users to list for display
         branches={branches} // Pass branches to list for display
       />
 
-      {/* Add/Edit Transaction Form Modal */}
-      <TransactionFormModal
-        show={showFormModal}
-        onClose={() => setShowFormModal(false)}
-        onSubmit={handleSaveTransaction}
-        transaction={currentTransactionToEdit} // Pass transaction for editing (null for adding)
-        accounts={accounts} // Pass for account dropdown
-        users={users}       // Pass for addedby dropdown
-        branches={branches} // Pass for branch dropdown
-      />
-
-      {/* View Single Transaction Line Details Modal */}
+      {/* View Full Journal Entry Details Modal */}
       <TransactionDetailModal
         show={showDetailModal}
         onClose={() => setShowDetailModal(false)}
-        transaction={currentTransactionToView}
+        selectedTransactionNo={transactionNoToView} // Pass the transaction_no for the modal to filter
+        allTransactions={transactions} // Pass all transactions for filtering in modal
         accounts={accounts}
         users={users}
         branches={branches}
@@ -163,7 +116,7 @@ function TransactionPage() {
         show={showReverseModal}
         onClose={() => setShowReverseModal(false)}
         onSubmit={handleConfirmReversal}
-        transactionNo={transactionNoToReverse} // Pass the transaction number to be reversed
+        originalTransactionNo={transactionNoToReverse} // Pass the transaction number to be reversed
         users={users}     // For user selection in reversal form
         branches={branches} // For branch selection in reversal form
       />
