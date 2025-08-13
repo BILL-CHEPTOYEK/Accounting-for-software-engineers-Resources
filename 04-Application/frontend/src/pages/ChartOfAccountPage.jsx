@@ -1,7 +1,7 @@
 // /04-Application/backend/frontend/src/pages/ChartOfAccountPage.jsx
 
 import React, { useState, useEffect } from 'react';
-import { chartOfAccountApi, accountTypeApi } from '../services/api'; // Ensure you have these APIs
+import { chartOfAccountApi, accountTypeApi } from '../services/api';
 
 import ChartOfAccountFormModal from '../components/ChartOfAccountFormModal'; // The modal for add/edit operations
 
