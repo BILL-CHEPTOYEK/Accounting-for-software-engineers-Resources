@@ -2,14 +2,14 @@
 
 import React from 'react';
 
-function InvoiceList({ invoices, loading, error, onEdit, onViewDetails }) {
+function InvoiceList({ invoices, loading, error, onEdit, onViewDetails, onPostInvoice }) {
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center py-5">
-        <div className="spinner-border text-primary" role="status">
+        <div className="spinner-border text-info" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
-        <p className="ms-3 text-primary">Loading invoices...</p>
+        <p className="ms-3 text-info">Loading invoices...</p>
       </div>
     );
   }
@@ -25,7 +25,7 @@ function InvoiceList({ invoices, loading, error, onEdit, onViewDetails }) {
   if (invoices.length === 0) {
     return (
       <div className="alert alert-info text-center" role="alert">
-        No invoices found. Click "Create New Invoice" to get started!
+        No invoices found. Click "Create New Invoice" to add one.
       </div>
     );
   }
@@ -33,64 +33,67 @@ function InvoiceList({ invoices, loading, error, onEdit, onViewDetails }) {
   return (
     <div className="table-responsive">
       <table className="table table-hover table-striped shadow-sm rounded-3 overflow-hidden">
-        <thead className="bg-danger text-white"> {/* Using bg-danger for invoices */}
+        <thead className="bg-danger text-white">
           <tr>
-            <th scope="col">#</th>
             <th scope="col">Document No.</th>
             <th scope="col">Type</th>
-            <th scope="col">Party ID</th> {/* Will show Party ID for now */}
+            <th scope="col">Party</th>
             <th scope="col">Issue Date</th>
             <th scope="col">Due Date</th>
-            <th scope="col" className="text-end">Amount</th>
+            <th scope="col">Total Amount</th>
             <th scope="col">Status</th>
             <th scope="col" className="text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {invoices.map((invoice, index) => (
+          {invoices.map((invoice) => (
             <tr key={invoice.invoice_id}>
-              <th scope="row">{index + 1}</th>
               <td>{invoice.document_no}</td>
-              <td>
-                <span className={`badge ${
-                  invoice.type === 'Commercial' ? 'bg-primary' :
-                  invoice.type === 'Pro forma' ? 'bg-info' :
-                  'bg-secondary'
-                }`}>
-                  {invoice.type}
-                </span>
-              </td>
-              <td className="text-break">{invoice.party_id}</td>
+              <td>{invoice.type}</td>
+              <td>{invoice.party ? invoice.party.name : 'N/A'}</td>
               <td>{new Date(invoice.issue_date).toLocaleDateString()}</td>
               <td>{new Date(invoice.due_date).toLocaleDateString()}</td>
-              <td className="text-end">${parseFloat(invoice.total_amount).toFixed(2)}</td>
+              <td>${parseFloat(invoice.total_amount).toFixed(2)}</td>
               <td>
                 <span className={`badge ${
-                  invoice.status === 'Paid' ? 'bg-success' :
+                  invoice.status === 'Draft' ? 'bg-secondary' :
                   invoice.status === 'Sent' ? 'bg-primary' :
-                  invoice.status === 'Received' ? 'bg-info' :
+                  invoice.status === 'Paid' ? 'bg-success' :
                   invoice.status === 'Cancelled' ? 'bg-danger' :
-                  'bg-secondary'
+                  invoice.status === 'Posted_Cash_Sale' ? 'bg-success' : // Green for posted cash
+                  invoice.status === 'Posted_Credit_Sale' ? 'bg-info' : '' // Blue for posted credit
                 }`}>
                   {invoice.status}
                 </span>
               </td>
               <td className="text-center">
-                {/* Actions Buttons: Edit and Details (No Delete) */}
-                <button
-                  className="btn btn-sm btn-outline-primary me-2"
-                  onClick={() => onEdit(invoice)}
-                  title="Edit Invoice"
-                >
-                  <i className="bi bi-pencil"></i> Edit
-                </button>
-                <button
-                  className="btn btn-sm btn-outline-secondary"
-                  onClick={() => onViewDetails(invoice)}
-                  title="View Details"
-                >
-                  <i className="bi bi-eye"></i> Details
-                </button>
+                <div className="d-flex justify-content-center flex-wrap gap-2"> {/* Use flex-wrap for smaller screens */}
+                  {invoice.status === 'Draft' && (
+                    <button
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() => onEdit(invoice)}
+                      title="Edit Invoice"
+                    >
+                      <i className="bi bi-pencil"></i> Edit
+                    </button>
+                  )}
+                  <button
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={() => onViewDetails(invoice)}
+                    title="View Details"
+                  >
+                    <i className="bi bi-eye"></i> View
+                  </button>
+                  {invoice.status === 'Draft' && (
+                    <button
+                      className="btn btn-sm btn-success"
+                      onClick={() => onPostInvoice(invoice)}
+                      title="Post Invoice"
+                    >
+                      <i className="bi bi-check-circle"></i> Post
+                    </button>
+                  )}
+                </div>
               </td>
             </tr>
           ))}
