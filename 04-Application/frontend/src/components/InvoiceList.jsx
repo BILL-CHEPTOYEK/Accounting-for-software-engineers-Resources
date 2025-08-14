@@ -35,14 +35,14 @@ function InvoiceList({ invoices, loading, error, onEdit, onViewDetails, onPostIn
       <table className="table table-hover table-striped shadow-sm rounded-3 overflow-hidden">
         <thead className="bg-danger text-white">
           <tr>
-            <th scope="col">Document No.</th>
-            <th scope="col">Type</th>
-            <th scope="col">Party</th>
-            <th scope="col">Issue Date</th>
-            <th scope="col">Due Date</th>
-            <th scope="col">Total Amount</th>
-            <th scope="col">Status</th>
-            <th scope="col" className="text-center">Actions</th>
+            <th>Document No.</th>
+            <th>Type</th>
+            <th>Party</th>
+            <th>Issue Date</th>
+            <th>Due Date</th>
+            <th>Total Amount</th>
+            <th>Status</th>
+            <th className="text-center">Actions</th>
           </tr>
         </thead>
         <tbody>

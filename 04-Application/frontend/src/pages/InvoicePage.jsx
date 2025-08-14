@@ -1,12 +1,10 @@
 // /04-Application/backend/frontend/src/pages/InvoicePage.jsx
 
 import React, { useState, useEffect } from 'react';
-// Corrected import path for services
-import { invoiceApi, partyApi, userApi, branchApi } from '../../services/api';
-// Corrected import path for InvoiceList
-import InvoiceList from '../../components/InvoiceList';
+import { invoiceApi, partyApi, userApi, branchApi } from '../services/api';
+import InvoiceList from '../components/InvoiceList';
 // import InvoiceFormModal from '../components/InvoiceFormModal';
-import InvoiceDetailModal from '../../components/InvoiceDetailModal';
+import InvoiceDetailModal from '../components/InvoiceDetailModal';
 
 function InvoicePage({ setCurrentPage }) { // Receive setCurrentPage from AppLayout
   const [invoices, setInvoices] = useState([]);
