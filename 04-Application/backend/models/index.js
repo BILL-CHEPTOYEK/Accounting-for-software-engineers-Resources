@@ -3,22 +3,24 @@
 const sequelize = require('../config/database');
 const Party = require('./party');
 const Invoice = require('./invoice');
+const InvoiceLineItem = require('./invoiceLineItem'); 
 const AccountType = require('./accountType');
 const ChartOfAccount = require('./chartOfAccount');
 const Transaction = require('./transaction');
-const User = require('./user'); 
-const Branch = require('./branch'); 
+const User = require('./user');
+const Branch = require('./branch');
 
 const db = {};
 
 db.sequelize = sequelize;
 db.Party = Party;
 db.Invoice = Invoice;
+db.InvoiceLineItem = InvoiceLineItem; 
 db.AccountType = AccountType;
 db.ChartOfAccount = ChartOfAccount;
 db.Transaction = Transaction;
-db.User = User;    
-db.Branch = Branch; 
+db.User = User;
+db.Branch = Branch;
 
 // Define Associations
 
@@ -31,6 +33,18 @@ db.Invoice.belongsTo(db.Party, {
   foreignKey: 'party_id',
   as: 'party',
 });
+
+// Invoice to InvoiceLineItem association
+db.Invoice.hasMany(db.InvoiceLineItem, {
+  foreignKey: 'invoice_id',
+  as: 'lineItems', // When you query an Invoice, you can include 'lineItems'
+  onDelete: 'CASCADE', // If an Invoice is deleted, its line items are too
+});
+db.InvoiceLineItem.belongsTo(db.Invoice, {
+  foreignKey: 'invoice_id',
+  as: 'invoice',
+});
+
 
 // Chart of Accounts associations
 db.AccountType.hasMany(db.ChartOfAccount, {
@@ -65,14 +79,13 @@ db.Transaction.belongsTo(db.ChartOfAccount, {
 // Self-referencing association for transaction reversals
 db.Transaction.hasOne(db.Transaction, {
   foreignKey: 'reversal_of_transaction_id',
-  as: 'reversedTransaction', 
+  as: 'reversedTransaction',
 });
 db.Transaction.hasMany(db.Transaction, {
   foreignKey: 'reversal_of_transaction_id',
-  as: 'reversingTransactions', // Transactions that reverse THIS transaction
+  as: 'reversingTransactions',
   sourceKey: 'transaction_id',
 });
-
 
 // User and Branch associations for Transaction
 db.User.hasMany(db.Transaction, {
@@ -93,5 +106,14 @@ db.Transaction.belongsTo(db.Branch, {
   as: 'branch',
 });
 
+// User to Branch association
+db.Branch.hasMany(db.User, {
+  foreignKey: 'branch_id',
+  as: 'users',
+});
+db.User.belongsTo(db.Branch, {
+  foreignKey: 'branch_id',
+  as: 'branch',
+});
 
 module.exports = db;
