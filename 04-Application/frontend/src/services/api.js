@@ -30,6 +30,7 @@ export const invoiceApi = {
   createInvoice: (invoiceData) => api.post('/invoices', invoiceData),
   updateInvoice: (id, invoiceData) => api.put(`/invoices/${id}`, invoiceData),
   deleteInvoice: (id) => api.delete(`/invoices/${id}`),
+  postInvoice: (id, postData) => api.post(`/invoices/${id}/post`, postData), 
 };
 
 // --- API Functions for Account Types ---
