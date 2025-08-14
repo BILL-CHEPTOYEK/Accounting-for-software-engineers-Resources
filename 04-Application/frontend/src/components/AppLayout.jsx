@@ -7,7 +7,7 @@ import PartyPage from '../pages/PartyPage';
 import InvoicePage from '../pages/InvoicePage';
 import InvoiceFormPage from '../pages/InvoiceFormPage';
 import BillPage from '../pages/BillPage'; 
-import BillFormPage from '../pages/BillFormPage'; // NE
+import BillFormPage from '../pages/BillFormPage'; // N
 import TransactionPage from '../pages/TransactionPage';
 import RecordJournalEntryPage from '../pages/RecordJournalEntryPage';
 import AccountTypePage from '../pages/AccountTypePage';
