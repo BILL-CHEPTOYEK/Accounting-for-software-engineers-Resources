@@ -2,7 +2,7 @@
 
 const express = require('express');
 const router = express.Router();
-const invoiceController = require('../controllers/invoiceController'); // Path to invoice controller
+const invoiceController = require('../controllers/invoiceController');
 
 // Route to get all invoices
 router.get('/', invoiceController.getAllInvoices);
@@ -15,6 +15,9 @@ router.post('/', invoiceController.createInvoice);
 
 // Route to update an invoice by ID
 router.put('/:invoice_id', invoiceController.updateInvoice);
+
+// Route to post an invoice and generate transactions
+router.post('/:invoice_id/post', invoiceController.postInvoice);
 
 // Route to delete an invoice by ID
 router.delete('/:invoice_id', invoiceController.deleteInvoice);
