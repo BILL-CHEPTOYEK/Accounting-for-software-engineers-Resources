@@ -94,12 +94,12 @@ function AppLayout() {
               Transactions
             </a>
           </li>
-          <li>
+          {/* <li>
             <a href="#" className={`nav-link text-white ${currentAppState.page === 'recordJournalEntry' ? 'active' : ''}`} onClick={() => navigateToPage('recordJournalEntry')}>
               <i className="bi bi-journal-plus me-2"></i>
               Record JE
             </a>
-          </li>
+          </li> */}
           <li>
             <a href="#" className={`nav-link text-white ${currentAppState.page === 'accountTypes' ? 'active' : ''}`} onClick={() => navigateToPage('accountTypes')}>
               <i className="bi bi-bar-chart-fill me-2"></i>
