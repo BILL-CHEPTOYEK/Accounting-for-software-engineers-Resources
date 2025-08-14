@@ -3,7 +3,7 @@
 const db = require('../models');
 const Invoice = db.Invoice;
 const InvoiceLineItem = db.InvoiceLineItem; 
-const Transaction = db.Transaction;     // NEW: Import Transaction model
+const Transaction = db.Transaction;     
 const ChartOfAccount = db.ChartOfAccount; // NEW: Import ChartOfAccount for finding accounts
 const User = db.User;                   // NEW: Import User for addedby context (for transactions)
 const Branch = db.Branch;               // NEW: Import Branch for branch context (for transactions)
