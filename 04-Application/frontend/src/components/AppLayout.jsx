@@ -1,26 +1,25 @@
 // /04-Application/backend/frontend/src/components/AppLayout.jsx
 
 import React, { useState } from 'react';
+// Import page components - Paths are relative to this file's location
 import HomePage from '../pages/HomePage';
 import PartyPage from '../pages/PartyPage';
 import InvoicePage from '../pages/InvoicePage';
+import InvoiceFormPage from '../pages/InvoiceFormPage';
 import TransactionPage from '../pages/TransactionPage';
-import RecordJournalEntryPage from '../pages/RecordJournalEntryPage'; 
+import RecordJournalEntryPage from '../pages/RecordJournalEntryPage';
 import AccountTypePage from '../pages/AccountTypePage';
 import ChartOfAccountPage from '../pages/ChartOfAccountPage';
 import BranchPage from '../pages/BranchPage';
 import UserPage from '../pages/UserPage';
 
 function AppLayout() {
-  // State to manage current page view and any data to pass to it
   const [currentAppState, setCurrentAppState] = useState({ page: 'home', data: null });
 
-  // Custom setCurrentPage function to allow passing data
   const navigateToPage = (pageName, data = null) => {
     setCurrentAppState({ page: pageName, data: data });
   };
 
-  // Function to render the correct page component based on currentPage state
   const renderPage = () => {
     switch (currentAppState.page) {
       case 'home':
@@ -28,11 +27,13 @@ function AppLayout() {
       case 'parties':
         return <PartyPage />;
       case 'invoices':
-        return <InvoicePage />;
+        return <InvoicePage setCurrentPage={navigateToPage} />;
+      case 'invoiceForm':
+        return <InvoiceFormPage setCurrentPage={navigateToPage} invoiceToEdit={currentAppState.data} />;
       case 'transactions':
         return <TransactionPage setCurrentPage={navigateToPage} />;
       case 'recordJournalEntry':
-        return <RecordJournalEntryPage setCurrentPage={navigateToPage} transactionToEdit={currentAppState.data} />; 
+        return <RecordJournalEntryPage setCurrentPage={navigateToPage} transactionToEdit={currentAppState.data} />;
       case 'accountTypes':
         return <AccountTypePage />;
       case 'chartOfAccounts':
@@ -69,7 +70,7 @@ function AppLayout() {
             </a>
           </li>
           <li>
-            <a href="#" className={`nav-link text-white ${currentAppState.page === 'invoices' ? 'active' : ''}`} onClick={() => navigateToPage('invoices')}>
+            <a href="#" className={`nav-link text-white ${currentAppState.page === 'invoices' || currentAppState.page === 'invoiceForm' ? 'active' : ''}`} onClick={() => navigateToPage('invoices')}>
               <i className="bi bi-receipt-cutoff me-2"></i>
               Invoices
             </a>
