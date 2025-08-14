@@ -6,7 +6,7 @@ const InvoiceLineItem = db.InvoiceLineItem;
 const Transaction = db.Transaction;     
 const ChartOfAccount = db.ChartOfAccount; 
 const User = db.User;                   
-const Branch = db.Branch;               // NEW: Import Branch for branch context (for transactions)
+const Branch = db.Branch;             
 
 // Helper function to find a ChartOfAccount by its name and type (e.g., 'Cash' for 'Asset')
 // This makes the posting logic more robust by not relying on hardcoded UUIDs.
