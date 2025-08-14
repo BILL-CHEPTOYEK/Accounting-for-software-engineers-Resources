@@ -1,7 +1,7 @@
 // /04-Application/backend/frontend/src/pages/InvoiceFormPage.jsx
 
 import React, { useState, useEffect } from 'react';
-import { invoiceApi, partyApi, userApi, branchApi } from '../../services/api'; // Corrected import path
+import { invoiceApi, partyApi, userApi, branchApi } from '../services/api'; 
 
 function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
   const isEditMode = !!invoiceToEdit;
