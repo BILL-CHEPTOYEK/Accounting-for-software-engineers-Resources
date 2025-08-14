@@ -16,8 +16,7 @@ function BillFormPage({ setCurrentPage, billToEdit }) {
     status: 'Draft', // Default status
     lineItems: [
       { description: '', quantity: '1', unit_price: '0.00', line_total_amount: '0.00', account_id: '' },
-      { description: '', quantity: '1', unit_price: '0.00', line_total_amount: '0.00', account_id: '' },
-    ],
+    ], // Start with just one line for a cleaner look
   };
 
   const [bill, setBill] = useState(initialBillState);
@@ -144,7 +143,7 @@ function BillFormPage({ setCurrentPage, billToEdit }) {
 
   const handleRemoveLineItem = (index) => {
     if (bill.lineItems.length <= 1) {
-      alert('A bill must have at least one line item.');
+      alert('A bill must have at least one line item.'); // Using alert as per previous pattern
       return;
     }
     setBill(prev => ({
@@ -182,7 +181,7 @@ function BillFormPage({ setCurrentPage, billToEdit }) {
       if (isNaN(parseFloat(line.unit_price)) || parseFloat(line.unit_price) < 0) {
         lineSpecificErrors.unit_price = 'Unit Price must be a non-negative number.';
       }
-      if (!line.account_id) { // NEW: Validate account_id for each line
+      if (!line.account_id) { // Validate account_id for each line
         lineSpecificErrors.account_id = 'Account is required.';
       }
       return Object.keys(lineSpecificErrors).length > 0 ? lineSpecificErrors : null;
@@ -280,14 +279,15 @@ function BillFormPage({ setCurrentPage, billToEdit }) {
       )}
 
       <form onSubmit={handleSubmit}>
-        {/* Bill Details Card */}
+        {/* Bill Details Card - Optimized UI */}
         <div className="card shadow-sm p-4 mb-4">
           <h5 className="card-title text-primary mb-3">Bill Details</h5>
-          <div className="row">
-            <div className="col-md-6 mb-3">
-              <label htmlFor="party_id" className="form-label">Supplier <span className="text-danger">*</span></label>
+          <div className="row row-cols-1 row-cols-md-2 g-3 mb-2"> {/* Using g-3 for gap, reduced mb */}
+            {/* Supplier */}
+            <div className="col">
+              <label htmlFor="party_id" className="form-label mb-1">Supplier <span className="text-danger">*</span></label>
               <select
-                className={`form-select ${errors.party_id ? 'is-invalid' : ''}`}
+                className={`form-select form-select-sm ${errors.party_id ? 'is-invalid' : ''}`} // Corrected: Removed stray comment characters
                 id="party_id"
                 name="party_id"
                 value={bill.party_id}
@@ -303,11 +303,12 @@ function BillFormPage({ setCurrentPage, billToEdit }) {
               </select>
               {errors.party_id && <div className="invalid-feedback">{errors.party_id}</div>}
             </div>
-            <div className="col-md-6 mb-3">
-              <label htmlFor="document_no" className="form-label">Document Number (from Supplier) <span className="text-danger">*</span></label>
+            {/* Document Number */}
+            <div className="col">
+              <label htmlFor="document_no" className="form-label mb-1">Document Number <span className="text-danger">*</span></label>
               <input
                 type="text"
-                className={`form-control ${errors.document_no ? 'is-invalid' : ''}`}
+                className={`form-control form-control-sm ${errors.document_no ? 'is-invalid' : ''}`} // Corrected: Removed stray comment characters
                 id="document_no"
                 name="document_no"
                 value={bill.document_no}
@@ -319,12 +320,13 @@ function BillFormPage({ setCurrentPage, billToEdit }) {
             </div>
           </div>
 
-          <div className="row">
-            <div className="col-md-6 mb-3">
-              <label htmlFor="issue_date" className="form-label">Issue Date <span className="text-danger">*</span></label>
+          <div className="row row-cols-1 row-cols-md-2 g-3 mb-3"> {/* Using g-3 for gap, mb-3 */}
+            {/* Issue Date */}
+            <div className="col">
+              <label htmlFor="issue_date" className="form-label mb-1">Issue Date <span className="text-danger">*</span></label>
               <input
                 type="date"
-                className={`form-control ${errors.issue_date ? 'is-invalid' : ''}`}
+                className={`form-control form-control-sm ${errors.issue_date ? 'is-invalid' : ''}`} // Corrected: Removed stray comment characters
                 id="issue_date"
                 name="issue_date"
                 value={bill.issue_date}
@@ -333,11 +335,12 @@ function BillFormPage({ setCurrentPage, billToEdit }) {
               />
               {errors.issue_date && <div className="invalid-feedback">{errors.issue_date}</div>}
             </div>
-            <div className="col-md-6 mb-3">
-              <label htmlFor="due_date" className="form-label">Due Date <span className="text-danger">*</span></label>
+            {/* Due Date */}
+            <div className="col">
+              <label htmlFor="due_date" className="form-label mb-1">Due Date <span className="text-danger">*</span></label>
               <input
                 type="date"
-                className={`form-control ${errors.due_date ? 'is-invalid' : ''}`}
+                className={`form-control form-control-sm ${errors.due_date ? 'is-invalid' : ''}`} // Corrected: Removed stray comment characters
                 id="due_date"
                 name="due_date"
                 value={bill.due_date}
@@ -348,23 +351,23 @@ function BillFormPage({ setCurrentPage, billToEdit }) {
             </div>
           </div>
 
-          {/* Display current status and total amount (read-only) */}
-          <div className="row mt-3">
+          {/* Display current status and total amount (read-only) - More compact */}
+          <div className="row g-2 mt-2 align-items-center"> {/* Aligned items, smaller gap, less top margin */}
             <div className="col-md-6">
-              <div className="alert alert-light border text-muted py-2 px-3">
-                Current Status: <span className="fw-bold text-primary">{bill.status}</span>
+              <div className="alert alert-light border text-muted py-1 px-2 mb-0"> {/* Reduced padding and margin */}
+                Status: <span className="fw-bold text-primary">{bill.status}</span>
               </div>
             </div>
             <div className="col-md-6">
-              <div className={`alert text-end py-2 px-3 ${parseFloat(bill.total_amount) <= 0 ? 'alert-warning' : 'alert-info'}`}>
-                <h4 className="mb-0">Total Amount: <span className="fw-bold">${bill.total_amount}</span></h4>
+              <div className={`alert text-end py-1 px-2 mb-0 ${parseFloat(bill.total_amount) <= 0 ? 'alert-warning' : 'alert-info'}`}> {/* Reduced padding and margin */}
+                <h5 className="mb-0">Total: <span className="fw-bold">${bill.total_amount}</span></h5>
                 {errors.total_amount && <div className="text-danger small">{errors.total_amount}</div>}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Bill Line Items Card */}
+        {/* Bill Line Items Card - Refined UI */}
         <div className="card shadow-sm p-4 mb-4">
           <h5 className="card-title text-primary mb-3">Line Items <span className="text-danger">*</span></h5>
           {isEditMode && (bill.status === 'Approved' || bill.status === 'Paid' || bill.status === 'Cancelled') && (
@@ -372,88 +375,99 @@ function BillFormPage({ setCurrentPage, billToEdit }) {
               <i className="bi bi-info-circle me-2"></i> Line items cannot be modified for an approved, paid, or cancelled bill.
             </div>
           )}
-          {bill.lineItems.map((item, index) => (
-            <div key={item.bill_line_id || `new-line-${index}`} className="card mb-3 p-3 border">
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <h6 className="mb-0">Item {index + 1}</h6>
-                {(!isEditMode || !(bill.status === 'Approved' || bill.status === 'Paid' || bill.status === 'Cancelled')) && (
-                  <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => handleRemoveLineItem(index)}>
-                    <i className="bi bi-x-circle me-1"></i> Remove
-                  </button>
-                )}
-              </div>
-              <div className="row g-3">
-                <div className="col-md-6">
-                  <label htmlFor={`description_${index}`} className="form-label">Description <span className="text-danger">*</span></label>
-                  <input
-                    type="text"
-                    className={`form-control ${errors.lineItems?.[index]?.description ? 'is-invalid' : ''}`}
-                    id={`description_${index}`}
-                    name="description"
-                    value={item.description}
-                    onChange={(e) => handleLineItemChange(index, e)}
-                    placeholder="e.g., Office Supplies, Consulting Fee"
-                    readOnly={isEditMode && (bill.status === 'Approved' || bill.status === 'Paid' || bill.status === 'Cancelled')}
-                  />
-                  {errors.lineItems?.[index]?.description && <div className="invalid-feedback">{errors.lineItems[index].description}</div>}
-                </div>
-                <div className="col-md-6">
-                  <label htmlFor={`account_id_${index}`} className="form-label">Expense/Asset Account <span className="text-danger">*</span></label>
-                  <select
-                    className={`form-select ${errors.lineItems?.[index]?.account_id ? 'is-invalid' : ''}`}
-                    id={`account_id_${index}`}
-                    name="account_id"
-                    value={item.account_id}
-                    onChange={(e) => handleLineItemChange(index, e)}
-                    disabled={isEditMode && (bill.status === 'Approved' || bill.status === 'Paid' || bill.status === 'Cancelled')}
-                  >
-                    <option value="">Select Account</option>
-                    {expenseAssetAccounts.map(account => (
-                      <option key={account.account_id} value={account.account_id}>
-                        {account.account_no} - {account.name} ({account.accountType?.category})
-                      </option>
-                    ))}
-                  </select>
-                  {errors.lineItems?.[index]?.account_id && <div className="invalid-feedback">{errors.lineItems[index].account_id}</div>}
-                </div>
-                <div className="col-md-3">
-                  <label htmlFor={`quantity_${index}`} className="form-label">Quantity <span className="text-danger">*</span></label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className={`form-control ${errors.lineItems?.[index]?.quantity ? 'is-invalid' : ''}`}
-                    id={`quantity_${index}`}
-                    name="quantity"
-                    value={item.quantity}
-                    onChange={(e) => handleLineItemChange(index, e)}
-                    min="0.01"
-                    readOnly={isEditMode && (bill.status === 'Approved' || bill.status === 'Paid' || bill.status === 'Cancelled')}
-                  />
-                  {errors.lineItems?.[index]?.quantity && <div className="invalid-feedback">{errors.lineItems[index].quantity}</div>}
-                </div>
-                <div className="col-md-3">
-                  <label htmlFor={`unit_price_${index}`} className="form-label">Unit Price <span className="text-danger">*</span></label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className={`form-control ${errors.lineItems?.[index]?.unit_price ? 'is-invalid' : ''}`}
-                    id={`unit_price_${index}`}
-                    name="unit_price"
-                    value={item.unit_price}
-                    onChange={(e) => handleLineItemChange(index, e)}
-                    min="0"
-                    readOnly={isEditMode && (bill.status === 'Approved' || bill.status === 'Paid' || bill.status === 'Cancelled')}
-                  />
-                  {errors.lineItems?.[index]?.unit_price && <div className="invalid-feedback">{errors.lineItems[index].unit_price}</div>}
-                </div>
-                <div className="col-12">
-                  <div className="alert alert-light text-end py-2 px-3 mb-0">
-                    Line Total: <span className="fw-bold">${item.line_total_amount}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+
+          <div className="table-responsive">
+            <table className="table table-sm table-borderless align-middle mb-0">
+              <thead>
+                <tr className="text-muted small border-bottom">
+                  <th style={{ width: '35%' }}>Description</th>
+                  <th style={{ width: '25%' }}>Account</th>
+                  <th style={{ width: '10%' }} className="text-end">Qty</th>
+                  <th style={{ width: '15%' }} className="text-end">Unit Price</th>
+                  <th style={{ width: '10%' }} className="text-end">Total</th>
+                  <th style={{ width: '5%' }} className="text-center"></th> {/* For remove button */}
+                </tr>
+              </thead>
+              <tbody>
+                {bill.lineItems.map((item, index) => (
+                  <tr key={item.bill_line_id || `new-line-${index}`} className="border-bottom">
+                    {/* Description */}
+                    <td>
+                      <input
+                        type="text"
+                        className={`form-control form-control-sm ${errors.lineItems?.[index]?.description ? 'is-invalid' : ''}`}
+                        name="description"
+                        value={item.description}
+                        onChange={(e) => handleLineItemChange(index, e)}
+                        placeholder="Item or service"
+                        readOnly={isEditMode && (bill.status === 'Approved' || bill.status === 'Paid' || bill.status === 'Cancelled')}
+                      />
+                      {errors.lineItems?.[index]?.description && <div className="invalid-feedback">{errors.lineItems[index].description}</div>}
+                    </td>
+                    {/* Account Selection */}
+                    <td>
+                      <select
+                        className={`form-select form-select-sm ${errors.lineItems?.[index]?.account_id ? 'is-invalid' : ''}`}
+                        name="account_id"
+                        value={item.account_id}
+                        onChange={(e) => handleLineItemChange(index, e)}
+                        disabled={isEditMode && (bill.status === 'Approved' || bill.status === 'Paid' || bill.status === 'Cancelled')}
+                      >
+                        <option value="">Select Account</option>
+                        {expenseAssetAccounts.map(account => (
+                          <option key={account.account_id} value={account.account_id}>
+                            {account.account_no} - {account.name}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.lineItems?.[index]?.account_id && <div className="invalid-feedback">{errors.lineItems[index].account_id}</div>}
+                    </td>
+                    {/* Quantity */}
+                    <td>
+                      <input
+                        type="number"
+                        step="0.01"
+                        className={`form-control form-control-sm text-end ${errors.lineItems?.[index]?.quantity ? 'is-invalid' : ''}`}
+                        name="quantity"
+                        value={item.quantity}
+                        onChange={(e) => handleLineItemChange(index, e)}
+                        min="0.01"
+                        readOnly={isEditMode && (bill.status === 'Approved' || bill.status === 'Paid' || bill.status === 'Cancelled')}
+                      />
+                      {errors.lineItems?.[index]?.quantity && <div className="invalid-feedback">{errors.lineItems[index].quantity}</div>}
+                    </td>
+                    {/* Unit Price */}
+                    <td>
+                      <input
+                        type="number"
+                        step="0.01"
+                        className={`form-control form-control-sm text-end ${errors.lineItems?.[index]?.unit_price ? 'is-invalid' : ''}`}
+                        name="unit_price"
+                        value={item.unit_price}
+                        onChange={(e) => handleLineItemChange(index, e)}
+                        min="0"
+                        readOnly={isEditMode && (bill.status === 'Approved' || bill.status === 'Paid' || bill.status === 'Cancelled')}
+                      />
+                      {errors.lineItems?.[index]?.unit_price && <div className="invalid-feedback">{errors.lineItems[index].unit_price}</div>}
+                    </td>
+                    {/* Line Total (Read-only) */}
+                    <td className="text-end fw-bold text-nowrap">
+                      ${parseFloat(item.line_total_amount).toFixed(2)}
+                    </td>
+                    {/* Remove Button */}
+                    <td className="text-center">
+                      {(!isEditMode || !(bill.status === 'Approved' || bill.status === 'Paid' || bill.status === 'Cancelled')) && (
+                        <button type="button" className="btn btn-sm btn-outline-danger border-0" onClick={() => handleRemoveLineItem(index)} title="Remove Line Item">
+                          <i className="bi bi-trash"></i>
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
           {(!isEditMode || !(bill.status === 'Approved' || bill.status === 'Paid' || bill.status === 'Cancelled')) && (
             <button type="button" className="btn btn-outline-secondary w-100 mt-3" onClick={handleAddLineItem}>
               <i className="bi bi-plus-circle me-2"></i> Add Another Line Item

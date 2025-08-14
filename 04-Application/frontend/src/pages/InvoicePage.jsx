@@ -109,7 +109,7 @@ function InvoicePage({ setCurrentPage }) { // Receive setCurrentPage from AppLay
   return (
     <div className="container-fluid py-4">
       <h2 className="h3 fw-semibold text-dark mb-4 d-flex justify-content-between align-items-center">
-        <span><i className="bi bi-receipt-cutoff me-2 text-danger"></i> Invoices & Bills</span>
+        <span><i className="bi bi-receipt-cutoff me-2 text-danger"></i> Invoices</span>
         <button className="btn btn-warning text-white shadow-sm" onClick={handleCreateNewInvoice}>
           <i className="bi bi-plus-circle me-2"></i> Create New Invoice
         </button>

@@ -4,8 +4,8 @@ const sequelize = require('../config/database');
 const Party = require('./party');
 const Invoice = require('./invoice');
 const InvoiceLineItem = require('./invoiceLineItem');
-const Bill = require('./bill'); // NEW: Import Bill model
-const BillLineItem = require('./billLineItem'); // NEW: Import BillLineItem model
+const Bill = require('./bill'); 
+const BillLineItem = require('./billLineItem'); 
 const AccountType = require('./accountType');
 const ChartOfAccount = require('./chartOfAccount');
 const Transaction = require('./transaction');
@@ -18,8 +18,8 @@ db.sequelize = sequelize;
 db.Party = Party;
 db.Invoice = Invoice;
 db.InvoiceLineItem = InvoiceLineItem;
-db.Bill = Bill; 
-db.BillLineItem = BillLineItem; 
+db.Bill = Bill;
+db.BillLineItem = BillLineItem;
 db.AccountType = AccountType;
 db.ChartOfAccount = ChartOfAccount;
 db.Transaction = Transaction;
@@ -28,11 +28,10 @@ db.Branch = Branch;
 
 // Define Associations
 
-// Party associations for Sales (Invoices)
+// Party associations
 db.Party.hasMany(db.Invoice, {
   foreignKey: 'party_id',
   as: 'invoices',
-  scope: { party_type: 'Customer' }, // Explicitly link only Customers to Invoices
 });
 db.Invoice.belongsTo(db.Party, {
   foreignKey: 'party_id',
@@ -42,29 +41,38 @@ db.Invoice.belongsTo(db.Party, {
 // Invoice to InvoiceLineItem association
 db.Invoice.hasMany(db.InvoiceLineItem, {
   foreignKey: 'invoice_id',
-  as: 'lineItems',
-  onDelete: 'CASCADE',
+  as: 'lineItems', // When you query an Invoice, you can include 'lineItems'
+  onDelete: 'CASCADE', // If an Invoice is deleted, its line items are too
 });
 db.InvoiceLineItem.belongsTo(db.Invoice, {
   foreignKey: 'invoice_id',
   as: 'invoice',
 });
 
+// InvoiceLineItem to ChartOfAccount association (for revenue categorization)
+db.ChartOfAccount.hasMany(db.InvoiceLineItem, {
+  foreignKey: 'account_id',
+  as: 'invoiceLineItems', // A chart of account can be associated with many invoice line items
+});
+db.InvoiceLineItem.belongsTo(db.ChartOfAccount, {
+  foreignKey: 'account_id',
+  as: 'account', // An invoice line item belongs to one account
+});
+
 // Party associations for Purchases (Bills)
 db.Party.hasMany(db.Bill, {
   foreignKey: 'party_id',
-  as: 'bills', // Use 'bills' as the alias for Party's association
-  scope: { party_type: 'Supplier' }, // Explicitly link only Suppliers to Bills
+  as: 'bills', 
+  // scope: { party_type: 'Supplier' }, 
 });
 db.Bill.belongsTo(db.Party, {
   foreignKey: 'party_id',
-  as: 'party', // Use 'party' as the alias for Bill's association
+  as: 'party', 
 });
 
-// NEW: Bill to BillLineItem association
 db.Bill.hasMany(db.BillLineItem, {
   foreignKey: 'bill_id',
-  as: 'lineItems', // Use 'lineItems' for consistency with Invoices
+  as: 'lineItems', 
   onDelete: 'CASCADE', // If a Bill is deleted, its line items are too
 });
 db.BillLineItem.belongsTo(db.Bill, {

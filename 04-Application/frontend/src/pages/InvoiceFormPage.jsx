@@ -1,7 +1,7 @@
 // /04-Application/backend/frontend/src/pages/InvoiceFormPage.jsx
 
 import React, { useState, useEffect } from 'react';
-import { invoiceApi, partyApi, userApi, branchApi } from '../services/api'; // Corrected import path
+import { invoiceApi, partyApi, userApi, branchApi, chartOfAccountApi } from '../services/api'; 
 
 function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
   const isEditMode = !!invoiceToEdit;
@@ -16,9 +16,8 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
     total_amount: '0.00', // Calculated from line items
     status: 'Draft', // Default status
     lineItems: [
-      { description: '', quantity: '1', unit_price: '0.00', line_total_amount: '0.00' },
-      { description: '', quantity: '1', unit_price: '0.00', line_total_amount: '0.00' },
-    ],
+      { description: '', quantity: '1', unit_price: '0.00', line_total_amount: '0.00', account_id: '' }, // Added account_id
+    ], // Start with just one line for a cleaner look
     // For posting: (will be sent to the /post endpoint)
     payment_method: 'Credit', // Default payment method for new invoices
     addedby: '', // Will be auto-filled by logged-in user later
@@ -30,32 +29,40 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
   const [customerParties, setCustomerParties] = useState([]); // Filtered customers for dropdown
   const [users, setUsers] = useState([]); // For addedby
   const [branches, setBranches] = useState([]); // For branch_id
+  const [revenueAccounts, setRevenueAccounts] = useState([]); // Filtered revenue accounts for line items
   const [loadingLookups, setLoadingLookups] = useState(true);
   const [lookupError, setLookupError] = useState(null);
   const [submitError, setSubmitError] = useState(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Fetch lookup data (parties, users, branches) on component mount
+  // Fetch lookup data (parties, users, branches, accounts) on component mount
   useEffect(() => {
     const fetchLookups = async () => {
       try {
         setLoadingLookups(true);
         setLookupError(null);
-        const [partiesRes, usersRes, branchesRes] = await Promise.all([
+        const [partiesRes, usersRes, branchesRes, accountsRes] = await Promise.all([
           partyApi.getAllParties(),
           userApi.getAllUsers(),
           branchApi.getAllBranches(),
+          chartOfAccountApi.getAllChartOfAccounts(), // Fetch all accounts
         ]);
-        setParties(partiesRes.data); // Store all parties
+
+        setParties(partiesRes.data);
         const filteredCustomers = partiesRes.data.filter(party => party.party_type === 'Customer');
-        setCustomerParties(filteredCustomers); // Store only customers for the dropdown
+        setCustomerParties(filteredCustomers);
 
         setUsers(usersRes.data);
         setBranches(branchesRes.data);
 
+        // Filter for Revenue accounts for invoice line items
+        const filteredRevenueAccounts = accountsRes.data.filter(
+          account => account.accountType && account.accountType.category === 'Revenue'
+        );
+        setRevenueAccounts(filteredRevenueAccounts);
+
         // Set initial defaults for addedby and branch_id for NEW entries
-        // In a real app, these would come from the authenticated user's session
         if (!isEditMode) {
             setInvoice(prev => ({
                 ...prev,
@@ -66,7 +73,7 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
 
       } catch (err) {
         console.error('Failed to fetch lookup data:', err);
-        setLookupError('Failed to load necessary data (parties, users, branches). Please check your backend.');
+        setLookupError('Failed to load necessary data (parties, users, branches, accounts). Please check your backend.');
       } finally {
         setLoadingLookups(false);
       }
@@ -82,7 +89,8 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
         ...item,
         quantity: String(item.quantity),
         unit_price: String(item.unit_price),
-        line_total_amount: String(item.line_total_amount)
+        line_total_amount: String(item.line_total_amount),
+        account_id: item.account_id || '', // Ensure account_id is loaded
       })) : [];
 
       setInvoice({
@@ -94,13 +102,12 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
         total_amount: String(invoiceToEdit.total_amount) || '0.00',
         status: invoiceToEdit.status || 'Draft',
         lineItems: loadedLineItems.length > 0 ? loadedLineItems : initialInvoiceState.lineItems,
-        payment_method: 'Credit', // Default for edit mode, user can change before posting
+        payment_method: invoiceToEdit.payment_method || 'Credit',
         addedby: invoiceToEdit.addedby || (users.length > 0 ? users[0].user_id : ''),
         branch_id: invoiceToEdit.branch_id || (branches.length > 0 ? branches[0].branch_id : ''),
       });
-    } else if (!isEditMode && customerParties.length > 0 && users.length > 0 && branches.length > 0) {
+    } else if (!isEditMode && customerParties.length > 0 && users.length > 0 && branches.length > 0 && revenueAccounts.length > 0) {
       // Reset to initial state for new invoice if not in edit mode
-      // and lookup data is available
       setInvoice(prev => ({
         ...initialInvoiceState,
         addedby: users.length > 0 ? users[0].user_id : '',
@@ -108,7 +115,7 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
       }));
     }
     setErrors({}); // Clear errors when mode changes
-  }, [invoiceToEdit, isEditMode, customerParties, users, branches]); // Depend on customerParties
+  }, [invoiceToEdit, isEditMode, customerParties, users, branches, revenueAccounts]); // Depend on customerParties, users, branches, revenueAccounts
 
   // Calculate total amount whenever line items change
   useEffect(() => {
@@ -156,7 +163,7 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
       ...prev,
       lineItems: [
         ...prev.lineItems,
-        { description: '', quantity: '1', unit_price: '0.00', line_total_amount: '0.00' }
+        { description: '', quantity: '1', unit_price: '0.00', line_total_amount: '0.00', account_id: '' } // Added account_id
       ]
     }));
   };
@@ -180,7 +187,7 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
     if (!invoice.document_no.trim()) newErrors.document_no = 'Document Number is required.';
     if (!invoice.issue_date) {
         newErrors.issue_date = 'Issue Date is required.';
-    } else if (invoice.issue_date > today) { 
+    } else if (invoice.issue_date > today) {
         newErrors.issue_date = 'Issue Date cannot be in the future.';
     }
     if (!invoice.due_date) {
@@ -200,6 +207,9 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
       }
       if (isNaN(parseFloat(line.unit_price)) || parseFloat(line.unit_price) < 0) {
         lineSpecificErrors.unit_price = 'Unit Price must be a non-negative number.';
+      }
+      if (!line.account_id) { // Validate account_id for each line
+        lineSpecificErrors.account_id = 'Account is required.';
       }
       return Object.keys(lineSpecificErrors).length > 0 ? lineSpecificErrors : null;
     });
@@ -260,7 +270,7 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
         <div className="spinner-border text-info" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
-        <p className="ms-3 text-info">Loading necessary data (parties, users, branches)...</p>
+        <p className="ms-3 text-info">Loading necessary data (parties, users, branches, accounts)...</p>
       </div>
     );
   }
@@ -297,85 +307,89 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
       )}
 
       <form onSubmit={handleSubmit}>
-        {/* Invoice Details Card */}
+        {/* Invoice Details Card - Optimized UI */}
         <div className="card shadow-sm p-4 mb-4">
           <h5 className="card-title text-danger mb-3">Invoice Details</h5>
-          <div className="row">
-            <div className="col-md-6 mb-3">
-              <label htmlFor="party_id" className="form-label">Party (Customer) <span className="text-danger">*</span></label>
+          <div className="row row-cols-1 row-cols-md-2 g-3 mb-2">
+            {/* Party (Customer) */}
+            <div className="col">
+              <label htmlFor="party_id" className="form-label mb-1">Party (Customer) <span className="text-danger">*</span></label>
               <select
-                className={`form-select ${errors.party_id ? 'is-invalid' : ''}`}
+                className={`form-select form-select-sm ${errors.party_id ? 'is-invalid' : ''}`}
                 id="party_id"
                 name="party_id"
                 value={invoice.party_id}
                 onChange={handleInvoiceChange}
-                disabled={isEditMode && invoice.status.startsWith('Posted_')} 
+                disabled={isEditMode && invoice.status.startsWith('Posted_')}
               >
                 <option value="">Select Customer</option>
-                {customerParties.map(party => ( // Use filtered customerParties
+                {customerParties.map(party => (
                   <option key={party.party_id} value={party.party_id}>
-                    {/* Display only first_name and last_name */}
                     {party.first_name} {party.last_name}
                   </option>
                 ))}
               </select>
               {errors.party_id && <div className="invalid-feedback">{errors.party_id}</div>}
             </div>
-            <div className="col-md-6 mb-3">
-              <label htmlFor="document_no" className="form-label">Document Number <span className="text-danger">*</span></label>
+            {/* Document Number */}
+            <div className="col">
+              <label htmlFor="document_no" className="form-label mb-1">Document Number <span className="text-danger">*</span></label>
               <input
                 type="text"
-                className={`form-control ${errors.document_no ? 'is-invalid' : ''}`}
+                className={`form-control form-control-sm ${errors.document_no ? 'is-invalid' : ''}`}
                 id="document_no"
                 name="document_no"
                 value={invoice.document_no}
                 onChange={handleInvoiceChange}
                 placeholder="e.g., INV-2024-001"
-                readOnly={isEditMode && invoice.status.startsWith('Posted_')} // Prevent changing doc no after posting
+                readOnly={isEditMode && invoice.status.startsWith('Posted_')}
               />
               {errors.document_no && <div className="invalid-feedback">{errors.document_no}</div>}
             </div>
           </div>
 
-          <div className="row">
-            <div className="col-md-4 mb-3">
-              <label htmlFor="type" className="form-label">Invoice Type</label>
+          <div className="row row-cols-1 row-cols-md-3 g-3 mb-3">
+            {/* Invoice Type */}
+            <div className="col">
+              <label htmlFor="type" className="form-label mb-1">Invoice Type</label>
               <select
-                className="form-select"
+                className="form-select form-select-sm"
                 id="type"
                 name="type"
                 value={invoice.type}
                 onChange={handleInvoiceChange}
-                disabled={isEditMode && invoice.status.startsWith('Posted_')} // Prevent changing type after posting
+                disabled={isEditMode && invoice.status.startsWith('Posted_')}
               >
                 <option value="Commercial">Commercial</option>
                 <option value="Pro forma">Pro forma</option>
                 <option value="Quotation">Quotation</option>
               </select>
             </div>
-            <div className="col-md-4 mb-3">
-              <label htmlFor="issue_date" className="form-label">Issue Date <span className="text-danger">*</span></label>
+            {/* Issue Date */}
+            <div className="col">
+              <label htmlFor="issue_date" className="form-label mb-1">Issue Date <span className="text-danger">*</span></label>
               <input
                 type="date"
-                className={`form-control ${errors.issue_date ? 'is-invalid' : ''}`}
+                className={`form-control form-control-sm ${errors.issue_date ? 'is-invalid' : ''}`}
                 id="issue_date"
                 name="issue_date"
                 value={invoice.issue_date}
                 onChange={handleInvoiceChange}
-                readOnly={isEditMode && invoice.status.startsWith('Posted_')} // Prevent changing issue date after posting
+                readOnly={isEditMode && invoice.status.startsWith('Posted_')}
               />
               {errors.issue_date && <div className="invalid-feedback">{errors.issue_date}</div>}
             </div>
-            <div className="col-md-4 mb-3">
-              <label htmlFor="due_date" className="form-label">Due Date <span className="text-danger">*</span></label>
+            {/* Due Date */}
+            <div className="col">
+              <label htmlFor="due_date" className="form-label mb-1">Due Date <span className="text-danger">*</span></label>
               <input
                 type="date"
-                className={`form-control ${errors.due_date ? 'is-invalid' : ''}`}
+                className={`form-control form-control-sm ${errors.due_date ? 'is-invalid' : ''}`}
                 id="due_date"
                 name="due_date"
                 value={invoice.due_date}
                 onChange={handleInvoiceChange}
-                readOnly={isEditMode && invoice.status.startsWith('Posted_')} // Prevent changing due date after posting
+                readOnly={isEditMode && invoice.status.startsWith('Posted_')}
               />
               {errors.due_date && <div className="invalid-feedback">{errors.due_date}</div>}
             </div>
@@ -385,23 +399,23 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
           <input type="hidden" name="addedby" value={invoice.addedby} />
           <input type="hidden" name="branch_id" value={invoice.branch_id} />
 
-          {/* Display current status and total amount (read-only) */}
-          <div className="row mt-3">
+          {/* Display current status and total amount (read-only) - More compact */}
+          <div className="row g-2 mt-2 align-items-center">
             <div className="col-md-6">
-              <div className="alert alert-light border text-muted py-2 px-3">
-                Current Status: <span className="fw-bold text-primary">{invoice.status}</span>
+              <div className="alert alert-light border text-muted py-1 px-2 mb-0">
+                Status: <span className="fw-bold text-primary">{invoice.status}</span>
               </div>
             </div>
             <div className="col-md-6">
-              <div className={`alert text-end py-2 px-3 ${parseFloat(invoice.total_amount) <= 0 ? 'alert-warning' : 'alert-info'}`}>
-                <h4 className="mb-0">Total Amount: <span className="fw-bold">${invoice.total_amount}</span></h4>
+              <div className={`alert text-end py-1 px-2 mb-0 ${parseFloat(invoice.total_amount) <= 0 ? 'alert-warning' : 'alert-info'}`}>
+                <h5 className="mb-0">Total: <span className="fw-bold">${invoice.total_amount}</span></h5>
                 {errors.total_amount && <div className="text-danger small">{errors.total_amount}</div>}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Invoice Line Items Card */}
+        {/* Invoice Line Items Card - Refined UI */}
         <div className="card shadow-sm p-4 mb-4">
           <h5 className="card-title text-danger mb-3">Line Items <span className="text-danger">*</span></h5>
           {isEditMode && invoice.status.startsWith('Posted_') && (
@@ -409,74 +423,104 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
               <i className="bi bi-info-circle me-2"></i> Line items cannot be modified for a posted invoice.
             </div>
           )}
-          {invoice.lineItems.map((item, index) => (
-            <div key={item.invoice_line_id || `new-line-${index}`} className="card mb-3 p-3 border">
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <h6 className="mb-0">Item {index + 1}</h6>
-                {!isEditMode || !invoice.status.startsWith('Posted_') ? (
-                  <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => handleRemoveLineItem(index)}>
-                    <i className="bi bi-x-circle me-1"></i> Remove
-                  </button>
-                ) : null}
-              </div>
-              <div className="row g-3">
-                <div className="col-md-6">
-                  <label htmlFor={`description_${index}`} className="form-label">Description <span className="text-danger">*</span></label>
-                  <input
-                    type="text"
-                    className={`form-control ${errors.lineItems?.[index]?.description ? 'is-invalid' : ''}`}
-                    id={`description_${index}`}
-                    name="description"
-                    value={item.description}
-                    onChange={(e) => handleLineItemChange(index, e)}
-                    placeholder="e.g., Product X, Consulting Hours"
-                    readOnly={isEditMode && invoice.status.startsWith('Posted_')}
-                  />
-                  {errors.lineItems?.[index]?.description && <div className="invalid-feedback">{errors.lineItems[index].description}</div>}
-                </div>
-                <div className="col-md-3">
-                  <label htmlFor={`quantity_${index}`} className="form-label">Quantity <span className="text-danger">*</span></label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className={`form-control ${errors.lineItems?.[index]?.quantity ? 'is-invalid' : ''}`}
-                    id={`quantity_${index}`}
-                    name="quantity"
-                    value={item.quantity}
-                    onChange={(e) => handleLineItemChange(index, e)}
-                    min="0.01"
-                    readOnly={isEditMode && invoice.status.startsWith('Posted_')}
-                  />
-                  {errors.lineItems?.[index]?.quantity && <div className="invalid-feedback">{errors.lineItems[index].quantity}</div>}
-                </div>
-                <div className="col-md-3">
-                  <label htmlFor={`unit_price_${index}`} className="form-label">Unit Price <span className="text-danger">*</span></label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className={`form-control ${errors.lineItems?.[index]?.unit_price ? 'is-invalid' : ''}`}
-                    id={`unit_price_${index}`}
-                    name="unit_price"
-                    value={item.unit_price}
-                    onChange={(e) => handleLineItemChange(index, e)}
-                    min="0"
-                    readOnly={isEditMode && invoice.status.startsWith('Posted_')}
-                  />
-                  {errors.lineItems?.[index]?.unit_price && <div className="invalid-feedback">{errors.lineItems[index].unit_price}</div>}
-                </div>
-                <div className="col-12">
-                  <div className="alert alert-light text-end py-2 px-3 mb-0">
-                    Line Total: <span className="fw-bold">${item.line_total_amount}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-          {!isEditMode || !invoice.status.startsWith('Posted_') ? (
+
+          <div className="table-responsive">
+            <table className="table table-sm table-borderless align-middle mb-0">
+              <thead>
+                <tr className="text-muted small border-bottom">
+                  <th style={{ width: '30%' }}>Description</th>
+                  <th style={{ width: '25%' }}>Account</th>
+                  <th style={{ width: '10%' }} className="text-end">Qty</th>
+                  <th style={{ width: '15%' }} className="text-end">Unit Price</th>
+                  <th style={{ width: '10%' }} className="text-end">Total</th>
+                  <th style={{ width: '10%' }} className="text-center"></th> {/* For remove button */}
+                </tr>
+              </thead>
+              <tbody>
+                {invoice.lineItems.map((item, index) => (
+                  <tr key={item.invoice_line_id || `new-line-${index}`} className="border-bottom">
+                    {/* Description */}
+                    <td>
+                      <input
+                        type="text"
+                        className={`form-control form-control-sm ${errors.lineItems?.[index]?.description ? 'is-invalid' : ''}`}
+                        name="description"
+                        value={item.description}
+                        onChange={(e) => handleLineItemChange(index, e)}
+                        placeholder="Item or service"
+                        readOnly={isEditMode && invoice.status.startsWith('Posted_')}
+                      />
+                      {errors.lineItems?.[index]?.description && <div className="invalid-feedback">{errors.lineItems[index].description}</div>}
+                    </td>
+                    {/* Account Selection */}
+                    <td>
+                      <select
+                        className={`form-select form-select-sm ${errors.lineItems?.[index]?.account_id ? 'is-invalid' : ''}`}
+                        name="account_id"
+                        value={item.account_id}
+                        onChange={(e) => handleLineItemChange(index, e)}
+                        disabled={isEditMode && invoice.status.startsWith('Posted_')}
+                      >
+                        <option value="">Select Account</option>
+                        {revenueAccounts.map(account => (
+                          <option key={account.account_id} value={account.account_id}>
+                            {account.account_no} - {account.name}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.lineItems?.[index]?.account_id && <div className="invalid-feedback">{errors.lineItems[index].account_id}</div>}
+                    </td>
+                    {/* Quantity */}
+                    <td className="w-auto">
+                      <input
+                        type="number"
+                        step="0.01"
+                        className={`form-control form-control-sm text-end ${errors.lineItems?.[index]?.quantity ? 'is-invalid' : ''}`}
+                        name="quantity"
+                        value={item.quantity}
+                        onChange={(e) => handleLineItemChange(index, e)}
+                        min="0.01"
+                        readOnly={isEditMode && invoice.status.startsWith('Posted_')}
+                      />
+                      {errors.lineItems?.[index]?.quantity && <div className="invalid-feedback">{errors.lineItems[index].quantity}</div>}
+                    </td>
+                    {/* Unit Price */}
+                    <td className="w-auto">
+                      <input
+                        type="number"
+                        step="0.01"
+                        className={`form-control form-control-sm text-end ${errors.lineItems?.[index]?.unit_price ? 'is-invalid' : ''}`}
+                        name="unit_price"
+                        value={item.unit_price}
+                        onChange={(e) => handleLineItemChange(index, e)}
+                        min="0"
+                        readOnly={isEditMode && invoice.status.startsWith('Posted_')}
+                      />
+                      {errors.lineItems?.[index]?.unit_price && <div className="invalid-feedback">{errors.lineItems[index].unit_price}</div>}
+                    </td>
+                    {/* Line Total (Read-only) */}
+                    <td className="text-end fw-bold text-nowrap w-auto">
+                      ${parseFloat(item.line_total_amount).toFixed(2)}
+                    </td>
+                    {/* Remove Button */}
+                    <td className="text-center w-auto">
+                      {(!isEditMode || !invoice.status.startsWith('Posted_')) && (
+                        <button type="button" className="btn btn-sm btn-outline-danger border-0" onClick={() => handleRemoveLineItem(index)} title="Remove Line Item">
+                          <i className="bi bi-trash"></i>
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {(!isEditMode || !invoice.status.startsWith('Posted_')) && (
             <button type="button" className="btn btn-outline-secondary w-100 mt-3" onClick={handleAddLineItem}>
               <i className="bi bi-plus-circle me-2"></i> Add Another Line Item
             </button>
-          ) : null}
+          )}
         </div>
 
         {/* Action Buttons */}

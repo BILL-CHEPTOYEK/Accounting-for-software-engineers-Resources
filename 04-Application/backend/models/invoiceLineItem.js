@@ -36,6 +36,14 @@ const InvoiceLineItem = sequelize.define('InvoiceLineItem', {
     allowNull: false,
     defaultValue: 0.00,
   },
+  account_id: { // Foreign Key to ChartOfAccount
+    type: DataTypes.UUID,
+    allowNull: false, // Each line item must be associated with an account
+    references: {
+      model: 'chart_of_accounts', // Refers to 'chart_of_accounts' table
+      key: 'account_id',
+    },
+  },
 }, {
   tableName: 'invoice_line_items', // Explicitly define table name
   timestamps: true,
