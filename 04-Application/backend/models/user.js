@@ -11,11 +11,11 @@ const User = sequelize.define('User', {
   },
   first_name: {
     type: DataTypes.STRING(255),
-    allowNull: true,
+    allowNull: false, 
   },
   last_name: {
     type: DataTypes.STRING(255),
-    allowNull: true,
+    allowNull: false, 
   },
   email: {
     type: DataTypes.STRING(255),
@@ -25,18 +25,26 @@ const User = sequelize.define('User', {
       isEmail: true,
     },
   },
-  password_hash: { 
+  password_hash: {
     type: DataTypes.STRING(255),
     allowNull: false,
   },
   role: {
-    type: DataTypes.ENUM('Admin', 'Accountant', 'Employee'), 
+    type: DataTypes.ENUM('Admin', 'Accountant', 'Employee'),
     defaultValue: 'Employee',
     allowNull: false,
   },
   is_active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
+  },
+  branch_id: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: 'branches',
+      key: 'branch_id',
+    },
   },
 }, {
   tableName: 'users',

@@ -38,7 +38,7 @@ function PartyPage() {
 
   // Handler for opening the Add Party modal
   const handleAddParty = () => {
-    setCurrentParty(null); // Clear any existing party data (for 'add' mode)
+    setCurrentParty(null); // Clear any existing party data
     setShowAddEditModal(true);
   };
 
@@ -68,7 +68,7 @@ function PartyPage() {
       fetchParties(); // Re-fetch parties to update the list
     } catch (err) {
       console.error('Error saving party:', err);
-      // You could add more specific error handling here (e.g., toast notifications)
+      // You could add more specific error handling here
       alert('Failed to save party. Please check input and try again.');
     }
   };
