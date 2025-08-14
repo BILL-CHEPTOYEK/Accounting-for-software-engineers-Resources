@@ -1,19 +1,33 @@
 // /04-Application/backend/server.js
 
-const db = require('./models');
 const express = require('express');
+const cors = require('cors'); 
+const db = require('./models'); // Sequelize models
+const partyRoutes = require('./routes/partyRoutes');
+const invoiceRoutes = require('./routes/invoiceRoutes');
+const billRoutes = require('./routes/billRoutes'); 
+const accountTypeRoutes = require('./routes/accountTypeRoutes');
+const chartOfAccountRoutes = require('./routes/chartOfAccountRoutes');
+const transactionRoutes = require('./routes/transactionRoutes');
+const userRoutes = require('./routes/userRoutes');
+const branchRoutes = require('./routes/branchRoutes');
+
 const app = express();
-const cors = require('cors');
 const PORT = process.env.PORT || 3000;
 
-// Middleware to parse JSON bodies
-app.use(express.json());
+// Middleware
+app.use(express.json()); // Parse JSON request bodies
 
-// Enable CORS for all routes
-app.use(cors());
+// --- CORS Configuration ---
+app.use(cors({
+  origin: 'http://localhost:5173', 
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], 
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
-// --- Database Synchronization ---
-db.sequelize.sync({ alter: true })
+
+// Database synchronization and server start
+db.sequelize.sync({ alter: true }) // `alter: true` will update table schemas if models change
   .then(() => {
     console.log('Database synced successfully! All tables are up-to-date. 🎉');
     // Start your Express server only after the database is synced
@@ -22,34 +36,23 @@ db.sequelize.sync({ alter: true })
       console.log(`Access your app at http://localhost:${PORT}`);
     });
   })
-  .catch((err) => {
-    console.error('Error syncing database:', err);
-    process.exit(1); // Exit if database sync fails
+  .catch(err => {
+    console.error('Failed to sync database:', err);
+    process.exit(1); 
   });
 
 // --- Define API routes AFTER db synchronization setup ---
-
-const partyRoutes = require('./routes/partyRoutes');
 app.use('/api/parties', partyRoutes);
-
-const invoiceRoutes = require('./routes/invoiceRoutes');
 app.use('/api/invoices', invoiceRoutes);
-
-const accountTypeRoutes = require('./routes/accountTypeRoutes');
+app.use('/api/bills', billRoutes); 
 app.use('/api/account-types', accountTypeRoutes);
-
-const chartOfAccountRoutes = require('./routes/chartOfAccountRoutes');
 app.use('/api/chart-of-accounts', chartOfAccountRoutes);
-
-const branchRoutes = require('./routes/branchRoutes');
+app.use('/api/transactions', transactionRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/branches', branchRoutes);
 
-const userRoutes = require('./routes/userRoutes');
-app.use('/api/users', userRoutes);
 
-const transactionRoutes = require('./routes/transactionRoutes');
-app.use('/api/transactions', transactionRoutes);
-
+// Basic welcome route
 app.get('/', (req, res) => {
   res.send('Welcome to the Accounting System API. API endpoints are ready! 😊');
 });

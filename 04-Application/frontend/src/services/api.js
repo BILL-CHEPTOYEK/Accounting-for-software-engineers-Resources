@@ -4,15 +4,12 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-// Create an Axios instance with base configuration
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
-
-// request and response interceptors
 
 // --- API Functions for Parties ---
 export const partyApi = {
@@ -32,6 +29,17 @@ export const invoiceApi = {
   deleteInvoice: (id) => api.delete(`/invoices/${id}`),
   postInvoice: (id, postData) => api.post(`/invoices/${id}/post`, postData), 
 };
+
+// --- API Functions for Bills ---
+export const billApi = {
+  getAllBills: () => api.get('/bills'),
+  getBillById: (id) => api.get(`/bills/${id}`),
+  createBill: (billData) => api.post('/bills', billData),
+  updateBill: (id, billData) => api.put(`/bills/${id}`, billData),
+  deleteBill: (id) => api.delete(`/bills/${id}`),
+  postBill: (id, postData) => api.post(`/bills/${id}/post`, postData),
+};
+
 
 // --- API Functions for Account Types ---
 export const accountTypeApi = {
@@ -64,23 +72,20 @@ export const branchApi = {
 export const userApi = {
   getAllUsers: () => api.get('/users'),
   getUserById: (id) => api.get(`/users/${id}`),
-  createUser: (userData) => api.post('/users', userData), // Registration
+  createUser: (userData) => api.post('/users', userData),
   updateUser: (id, userData) => api.put(`/users/${id}`, userData),
   deleteUser: (id) => api.delete(`/users/${id}`),
-  loginUser: (credentials) => api.post('/users/login', credentials), // Login
+  loginUser: (credentials) => api.post('/users/login', credentials),
 };
 
 // --- API Functions for Transactions ---
 export const transactionApi = {
   getAllTransactions: () => api.get('/transactions'),
   getTransactionById: (id) => api.get(`/transactions/${id}`),
-  // createTransaction expects an array of transaction lines
   createTransaction: (transactionLines) => api.post('/transactions', transactionLines),
   updateTransaction: (id, transactionData) => api.put(`/transactions/${id}`, transactionData),
   deleteTransaction: (id) => api.delete(`/transactions/${id}`),
-  // reverseTransaction expects original_transaction_no in the body
   reverseTransaction: (reversalData) => api.post('/transactions/reverse', reversalData),
 };
 
-// Export the main Axios instance directly for general use if needed
 export default api;

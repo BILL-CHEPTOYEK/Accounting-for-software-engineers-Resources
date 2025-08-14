@@ -1,11 +1,13 @@
 // /04-Application/backend/frontend/src/components/AppLayout.jsx
 
 import React, { useState } from 'react';
-// Import page components - Paths are relative to this file's location
+// Import page components
 import HomePage from '../pages/HomePage';
 import PartyPage from '../pages/PartyPage';
 import InvoicePage from '../pages/InvoicePage';
 import InvoiceFormPage from '../pages/InvoiceFormPage';
+import BillPage from '../pages/BillPage'; 
+import BillFormPage from '../pages/BillFormPage'; // NEW: Import BillFormPage
 import TransactionPage from '../pages/TransactionPage';
 import RecordJournalEntryPage from '../pages/RecordJournalEntryPage';
 import AccountTypePage from '../pages/AccountTypePage';
@@ -30,6 +32,10 @@ function AppLayout() {
         return <InvoicePage setCurrentPage={navigateToPage} />;
       case 'invoiceForm':
         return <InvoiceFormPage setCurrentPage={navigateToPage} invoiceToEdit={currentAppState.data} />;
+      case 'bills': // NEW: Bills page route
+        return <BillPage setCurrentPage={navigateToPage} />;
+      case 'billForm': // NEW: Bill form page route
+        return <BillFormPage setCurrentPage={navigateToPage} billToEdit={currentAppState.data} />;
       case 'transactions':
         return <TransactionPage setCurrentPage={navigateToPage} />;
       case 'recordJournalEntry':
@@ -75,19 +81,25 @@ function AppLayout() {
               Invoices
             </a>
           </li>
+         
+          <li>
+            <a href="#" className={`nav-link text-white ${currentAppState.page === 'bills' || currentAppState.page === 'billForm' ? 'active' : ''}`} onClick={() => navigateToPage('bills')}>
+              <i className="bi bi-wallet-fill me-2"></i> 
+              Bills
+            </a>
+          </li>
           <li>
             <a href="#" className={`nav-link text-white ${currentAppState.page === 'transactions' ? 'active' : ''}`} onClick={() => navigateToPage('transactions')}>
               <i className="bi bi-wallet-fill me-2"></i>
               Transactions
             </a>
           </li>
-          {/* 
           <li>
             <a href="#" className={`nav-link text-white ${currentAppState.page === 'recordJournalEntry' ? 'active' : ''}`} onClick={() => navigateToPage('recordJournalEntry')}>
               <i className="bi bi-journal-plus me-2"></i>
               Record JE
             </a>
-          </li> */}
+          </li>
           <li>
             <a href="#" className={`nav-link text-white ${currentAppState.page === 'accountTypes' ? 'active' : ''}`} onClick={() => navigateToPage('accountTypes')}>
               <i className="bi bi-bar-chart-fill me-2"></i>
