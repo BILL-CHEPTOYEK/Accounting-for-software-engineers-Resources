@@ -12,12 +12,10 @@ const Transaction = sequelize.define('Transaction', {
   transaction_no: {
     type: DataTypes.STRING(255),
     allowNull: false,
-    unique: 'unique_transaction_no_type_date',
   },
   transaction_type: {
-    type: DataTypes.STRING(100), // Increased length for types like 'Invoice Sale (Cash)'
-    allowNull: false,
-    unique: 'unique_transaction_no_type_date', // Part of composite unique constraint
+    type: DataTypes.STRING(100),
+      allowNull: false,
   },
   account_id: {
     type: DataTypes.UUID,
@@ -56,7 +54,7 @@ const Transaction = sequelize.define('Transaction', {
   },
   is_posted: {
     type: DataTypes.BOOLEAN,
-    defaultValue: false, // False means it's a draft or unapproved entry
+    defaultValue: false,
   },
   reversal_of_transaction_id: {
     type: DataTypes.UUID,
@@ -90,8 +88,8 @@ const Transaction = sequelize.define('Transaction', {
   indexes: [
     {
       unique: true,
-      fields: ['transaction_no', 'transaction_type', 'date'], 
-      name: 'unique_transaction_entry',
+      fields: ['transaction_no', 'date'],
+      name: 'unique_journal_entry_per_day',
     },
     {
       fields: ['reference_no'],
