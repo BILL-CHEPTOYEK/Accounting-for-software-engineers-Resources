@@ -2,12 +2,15 @@
 
 const db = require('../models');
 const User = db.User;
+const Branch = db.Branch; 
 const bcrypt = require('bcryptjs');
+
 // Get all users
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll({
-      attributes: { exclude: ['password_hash'] }
+      attributes: { exclude: ['password_hash'] },
+      include: [{ model: Branch, as: 'branch' }] 
     });
     res.status(200).json(users);
   } catch (error) {
@@ -20,7 +23,8 @@ exports.getAllUsers = async (req, res) => {
 exports.getUserById = async (req, res) => {
   try {
     const user = await User.findByPk(req.params.user_id, {
-      attributes: { exclude: ['password_hash'] }
+      attributes: { exclude: ['password_hash'] },
+      include: [{ model: Branch, as: 'branch' }] // Include associated Branch data
     });
     if (user) {
       res.status(200).json(user);
@@ -36,13 +40,18 @@ exports.getUserById = async (req, res) => {
 // Create a new user (Registration)
 exports.createUser = async (req, res) => {
   try {
-    const { email, password, first_name, last_name, role } = req.body;
+    const { email, password, first_name, last_name, role, branch_id } = req.body; 
 
     // Basic validation
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required.' });
+    if (!email || !password || !branch_id) { // Ensure branch_id is also checked
+      return res.status(400).json({ error: 'Email, password, and branch are required.' });
     }
-    // You can add more complex email format validation here if not handled by Sequelize's isEmail
+
+    // Validate if branch_id exists
+    const existingBranch = await Branch.findByPk(branch_id);
+    if (!existingBranch) {
+      return res.status(400).json({ error: 'Invalid branch_id provided.' });
+    }
     
     // Hash the password before saving
     const salt = await bcrypt.genSalt(10);
@@ -53,7 +62,8 @@ exports.createUser = async (req, res) => {
       password_hash,
       first_name,
       last_name,
-      role
+      role,
+      branch_id 
     });
 
     // Exclude password hash from the response
@@ -65,6 +75,8 @@ exports.createUser = async (req, res) => {
     console.error('Error in createUser:', error);
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({ error: 'Email must be unique.' });
+    } else if (error.name === 'SequelizeForeignKeyConstraintError') {
+        return res.status(400).json({ error: 'Invalid branch ID provided.' });
     }
     res.status(400).json({ error: error.message || 'Bad Request' });
   }
@@ -73,8 +85,16 @@ exports.createUser = async (req, res) => {
 // Update a user by ID
 exports.updateUser = async (req, res) => {
   try {
-    const { password } = req.body;
+    const { password, branch_id } = req.body; // Destructure branch_id to handle separately
     const updateData = { ...req.body };
+
+    // Validate if branch_id exists if provided
+    if (branch_id) {
+        const existingBranch = await Branch.findByPk(branch_id);
+        if (!existingBranch) {
+            return res.status(400).json({ error: 'Invalid branch_id provided.' });
+        }
+    }
 
     if (password) {
       const salt = await bcrypt.genSalt(10);
@@ -87,7 +107,8 @@ exports.updateUser = async (req, res) => {
     });
     if (updated) {
       const updatedUser = await User.findByPk(req.params.user_id, {
-        attributes: { exclude: ['password_hash'] }
+        attributes: { exclude: ['password_hash'] },
+        include: [{ model: Branch, as: 'branch' }] 
       });
       res.status(200).json(updatedUser);
     } else {
@@ -97,6 +118,8 @@ exports.updateUser = async (req, res) => {
     console.error('Error in updateUser:', error);
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({ error: 'Email must be unique.' });
+    } else if (error.name === 'SequelizeForeignKeyConstraintError') {
+        return res.status(400).json({ error: 'Invalid branch ID provided.' });
     }
     res.status(500).json({ error: error.message || 'Internal Server Error' });
   }

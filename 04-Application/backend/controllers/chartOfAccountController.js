@@ -2,13 +2,13 @@
 
 const db = require('../models');
 const ChartOfAccount = db.ChartOfAccount;
-const AccountType = db.AccountType;
+const AccountType = db.AccountType; // Needed for foreign key validation
 
 // Get all accounts
 exports.getAllChartOfAccounts = async (req, res) => {
   try {
     const accounts = await ChartOfAccount.findAll({
-      include: [{ model: AccountType, as: 'accountType' }] 
+      include: [{ model: AccountType, as: 'accountType' }] // Include associated AccountType
     });
     res.status(200).json(accounts);
   } catch (error) {
@@ -50,15 +50,21 @@ exports.createChartOfAccount = async (req, res) => {
       return res.status(400).json({ error: 'Invalid account_type_id provided.' });
     }
 
-    // Validate parent_id exists if provided
-    if (parent_id) {
-      const existingParentAccount = await ChartOfAccount.findByPk(parent_id);
+    // Convert empty string parent_id to null for Sequelize/DB
+    const accountData = {
+      ...req.body,
+      parent_id: parent_id === '' ? null : parent_id // Convert empty string to null
+    };
+
+    // Validate parent_id exists if provided (and not null)
+    if (accountData.parent_id) {
+      const existingParentAccount = await ChartOfAccount.findByPk(accountData.parent_id);
       if (!existingParentAccount) {
         return res.status(400).json({ error: 'Invalid parent_id provided.' });
       }
     }
 
-    const newAccount = await ChartOfAccount.create(req.body);
+    const newAccount = await ChartOfAccount.create(accountData);
     res.status(201).json(newAccount);
   } catch (error) {
     console.error('Error in createChartOfAccount:', error);
@@ -82,15 +88,21 @@ exports.updateChartOfAccount = async (req, res) => {
       }
     }
 
-    // Validate parent_id exists if provided
-    if (parent_id) {
-      const existingParentAccount = await ChartOfAccount.findByPk(parent_id);
+    // Convert empty string parent_id to null for Sequelize/DB
+    const accountData = {
+      ...req.body,
+      parent_id: parent_id === '' ? null : parent_id // Convert empty string to null
+    };
+
+    // Validate parent_id exists if provided (and not null)
+    if (accountData.parent_id) {
+      const existingParentAccount = await ChartOfAccount.findByPk(accountData.parent_id);
       if (!existingParentAccount) {
         return res.status(400).json({ error: 'Invalid parent_id provided.' });
       }
     }
 
-    const [updated] = await ChartOfAccount.update(req.body, {
+    const [updated] = await ChartOfAccount.update(accountData, {
       where: { account_id: req.params.account_id }
     });
     if (updated) {
