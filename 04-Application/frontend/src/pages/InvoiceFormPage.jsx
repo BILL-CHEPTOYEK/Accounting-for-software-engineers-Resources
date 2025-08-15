@@ -12,7 +12,7 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
     type: 'Commercial', // Default invoice type
     document_no: '',
     issue_date: new Date().toISOString().split('T')[0], // Default to today's date
-    due_date: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0], // D
+    due_date: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0], // 
     total_amount: '0.00', // Calculated from line items
     status: 'Draft', // Default status
     lineItems: [
