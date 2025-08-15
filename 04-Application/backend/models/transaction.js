@@ -10,12 +10,12 @@ const Transaction = sequelize.define('Transaction', {
     primaryKey: true,
   },
   transaction_no: {
-    type: DataTypes.STRING(255),
+    type: DataTypes.STRING(255), 
     allowNull: false,
   },
   transaction_type: {
     type: DataTypes.STRING(100),
-      allowNull: false,
+    allowNull: false,
   },
   account_id: {
     type: DataTypes.UUID,
@@ -35,7 +35,7 @@ const Transaction = sequelize.define('Transaction', {
   },
   description: {
     type: DataTypes.TEXT,
-    allowNull: true,
+    allowNull: true, // Allow optional descriptions
   },
   debit: {
     type: DataTypes.DECIMAL(15, 2),
@@ -54,13 +54,13 @@ const Transaction = sequelize.define('Transaction', {
   },
   is_posted: {
     type: DataTypes.BOOLEAN,
-    defaultValue: false,
+    defaultValue: false, // False means it's a draft or unapproved entry
   },
   reversal_of_transaction_id: {
     type: DataTypes.UUID,
-    allowNull: true,
+    allowNull: true, // Can be null if not a reversal
     references: {
-      model: 'transactions',
+      model: 'transactions', // Self-referencing
       key: 'transaction_id',
     },
   },
@@ -86,11 +86,6 @@ const Transaction = sequelize.define('Transaction', {
   createdAt: 'created_at',
   updatedAt: 'updated_at',
   indexes: [
-    {
-      unique: true,
-      fields: ['transaction_no', 'date'],
-      name: 'unique_journal_entry_per_day',
-    },
     {
       fields: ['reference_no'],
       name: 'idx_transaction_reference_no',
