@@ -35,6 +35,7 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
   const [submitError, setSubmitError] = useState(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [errors, setErrors] = useState({});
+  const [lineItemRemovalError, setLineItemRemovalError] = useState(null); // New state for line item removal errors
 
   // Fetch lookup data (parties, users, branches, accounts) on component mount
   useEffect(() => {
@@ -115,6 +116,7 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
       }));
     }
     setErrors({}); // Clear errors when mode changes
+    setLineItemRemovalError(null); // Clear removal error
   }, [invoiceToEdit, isEditMode, customerParties, users, branches, revenueAccounts]); // Depend on customerParties, users, branches, revenueAccounts
 
   // Calculate total amount whenever line items change
@@ -156,6 +158,7 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
     }));
     setSubmitError(null);
     setSubmitSuccess(false);
+    setLineItemRemovalError(null); // Clear removal error when line item changes
   };
 
   const handleAddLineItem = () => {
@@ -166,17 +169,20 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
         { description: '', quantity: '1', unit_price: '0.00', line_total_amount: '0.00', account_id: '' } // Added account_id
       ]
     }));
+    setLineItemRemovalError(null); // Clear removal error
   };
 
   const handleRemoveLineItem = (index) => {
     if (invoice.lineItems.length <= 1) {
-      alert('An invoice must have at least one line item.');
+      // Display custom error message instead of alert
+      setLineItemRemovalError('An invoice must have at least one line item.');
       return;
     }
     setInvoice(prev => ({
       ...prev,
       lineItems: prev.lineItems.filter((_, i) => i !== index)
     }));
+    setLineItemRemovalError(null); // Clear removal error on successful removal
   };
 
   const validateForm = () => {
@@ -226,6 +232,7 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
     e.preventDefault();
     setSubmitError(null);
     setSubmitSuccess(false);
+    setLineItemRemovalError(null); // Clear line item error on submit attempt
 
     if (!validateForm()) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -421,6 +428,13 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
           {isEditMode && invoice.status.startsWith('Posted_') && (
             <div className="alert alert-warning mb-3">
               <i className="bi bi-info-circle me-2"></i> Line items cannot be modified for a posted invoice.
+            </div>
+          )}
+
+          {lineItemRemovalError && (
+            <div className="alert alert-danger alert-dismissible fade show" role="alert">
+              <i className="bi bi-exclamation-triangle-fill me-2"></i> {lineItemRemovalError}
+              <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close" onClick={() => setLineItemRemovalError(null)}></button>
             </div>
           )}
 
