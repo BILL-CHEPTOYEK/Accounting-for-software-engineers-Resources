@@ -320,9 +320,6 @@ exports.reverseTransaction = async (req, res) => {
       reversedTransactions.push(createdReversedLine);
     }
 
-    // Optionally: Mark original transactions as 'reversed' if you add a status field to Transaction
-    // , await Transaction.update({ status: 'Reversed' }, { where: { transaction_no: original_transaction_no }, transaction: t });
-
     await t.commit();
     res.status(201).json(reversedTransactions);
 
