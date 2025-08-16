@@ -112,6 +112,12 @@ function AppLayout() {
               Chart of Acc.
             </a>
           </li>
+           <li>
+            <a href="#" className={`nav-link text-white ${currentAppState.page === 'reports' ? 'active' : ''}`} onClick={() => navigateToPage('reports')}>
+              <i className="bi bi-file-earmark-text me-2"></i>
+              Reports
+            </a>
+          </li>
           <li>
             <a href="#" className={`nav-link text-white ${currentAppState.page === 'branches' ? 'active' : ''}`} onClick={() => navigateToPage('branches')}>
               <i className="bi bi-building-fill me-2"></i>

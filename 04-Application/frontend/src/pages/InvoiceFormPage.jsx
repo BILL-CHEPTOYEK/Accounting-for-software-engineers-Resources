@@ -17,11 +17,10 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
     status: 'Draft', // Default status
     lineItems: [
       { description: '', quantity: '1', unit_price: '0.00', line_total_amount: '0.00', account_id: '' }, // Added account_id
-    ], // Start with just one line for a cleaner look
-    // For posting: (will be sent to the /post endpoint)
-    payment_method: 'Credit', // Default payment method for new invoices
-    addedby: '', // Will be auto-filled by logged-in user later
-    branch_id: '', // Will be auto-filled by logged-in user's branch later
+    ], 
+    payment_method: 'Credit', 
+    addedby: '', 
+    branch_id: '', 
   };
 
   const [invoice, setInvoice] = useState(initialInvoiceState);
@@ -35,7 +34,7 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
   const [submitError, setSubmitError] = useState(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [errors, setErrors] = useState({});
-  const [lineItemRemovalError, setLineItemRemovalError] = useState(null); // New state for line item removal errors
+  const [lineItemRemovalError, setLineItemRemovalError] = useState(null); 
 
   // Fetch lookup data (parties, users, branches, accounts) on component mount
   useEffect(() => {
