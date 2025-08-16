@@ -385,7 +385,7 @@ function BillFormPage({ setCurrentPage, billToEdit }) {
                   <th style={{ width: '10%' }} className="text-end">Qty</th>
                   <th style={{ width: '15%' }} className="text-end">Unit Price</th>
                   <th style={{ width: '10%' }} className="text-end">Total</th>
-                  <th style={{ width: '5%' }} className="text-center"></th> {/* For remove button */}
+                  <th style={{ width: '5%' }} className="text-center"></th>
                 </tr>
               </thead>
               <tbody>
