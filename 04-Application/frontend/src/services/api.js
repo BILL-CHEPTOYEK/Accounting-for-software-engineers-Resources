@@ -28,6 +28,7 @@ export const invoiceApi = {
   updateInvoice: (id, invoiceData) => api.put(`/invoices/${id}`, invoiceData),
   deleteInvoice: (id) => api.delete(`/invoices/${id}`),
   postInvoice: (id, postData) => api.post(`/invoices/${id}/post`, postData), 
+  recordPayment: (paymentData) => api.post('/invoices/record-payment', paymentData),
 };
 
 // --- API Functions for Bills ---
@@ -38,6 +39,7 @@ export const billApi = {
   updateBill: (id, billData) => api.put(`/bills/${id}`, billData),
   deleteBill: (id) => api.delete(`/bills/${id}`),
   postBill: (id, postData) => api.post(`/bills/${id}/post`, postData),
+  recordPayment: (paymentData) => api.post('/bills/record-payment', paymentData),
 };
 
 
