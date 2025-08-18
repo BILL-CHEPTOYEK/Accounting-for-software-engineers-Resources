@@ -19,6 +19,9 @@ router.put('/:invoice_id', invoiceController.updateInvoice);
 // Route to post an invoice and generate transactions
 router.post('/:invoice_id/post', invoiceController.postInvoice);
 
+// Route to record a payment for invoices
+router.post('/record-payment', invoiceController.recordPayment);
+
 // Route to delete an invoice by ID
 router.delete('/:invoice_id', invoiceController.deleteInvoice);
 

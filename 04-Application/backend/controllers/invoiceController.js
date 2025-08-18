@@ -61,7 +61,7 @@ exports.getInvoiceById = async (req, res) => {
           as: 'lineItems',
           include: [{ model: ChartOfAccount, as: 'account' }]
         },
-        // NEW: Include PaymentAllocations to help calculate true outstanding balance
+        // Include PaymentAllocations to help calculate true outstanding balance
         {
           model: db.PaymentAllocation,
           as: 'paymentAllocations',

@@ -19,6 +19,9 @@ router.put('/:bill_id', billController.updateBill);
 // Route to post a bill and generate transactions
 router.post('/:bill_id/post', billController.postBill);
 
+// Route to record a payment for bills
+router.post('/record-payment', billController.recordPayment);
+
 // Route to delete a bill by ID
 router.delete('/:bill_id', billController.deleteBill);
 
