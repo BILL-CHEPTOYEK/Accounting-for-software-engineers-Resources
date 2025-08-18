@@ -6,14 +6,15 @@ import HomePage from '../pages/HomePage';
 import PartyPage from '../pages/PartyPage';
 import InvoicePage from '../pages/InvoicePage';
 import InvoiceFormPage from '../pages/InvoiceFormPage';
-import BillPage from '../pages/BillPage'; 
-import BillFormPage from '../pages/BillFormPage'; 
+import BillPage from '../pages/BillPage';
+import BillFormPage from '../pages/BillFormPage';
 import TransactionPage from '../pages/TransactionPage';
 import RecordJournalEntryPage from '../pages/RecordJournalEntryPage';
 import AccountTypePage from '../pages/AccountTypePage';
 import ChartOfAccountPage from '../pages/ChartOfAccountPage';
 import BranchPage from '../pages/BranchPage';
 import UserPage from '../pages/UserPage';
+import PartiesPaymentPage from '../pages/PartiesPaymentPage';
 
 function AppLayout() {
   const [currentAppState, setCurrentAppState] = useState({ page: 'home', data: null });
@@ -32,10 +33,12 @@ function AppLayout() {
         return <InvoicePage setCurrentPage={navigateToPage} />;
       case 'invoiceForm':
         return <InvoiceFormPage setCurrentPage={navigateToPage} invoiceToEdit={currentAppState.data} />;
-      case 'bills': // NEW: Bills page route
+      case 'bills':
         return <BillPage setCurrentPage={navigateToPage} />;
-      case 'billForm': // NEW: Bill form page route
+      case 'billForm':
         return <BillFormPage setCurrentPage={navigateToPage} billToEdit={currentAppState.data} />;
+      case 'parties-payment':
+        return <PartiesPaymentPage setCurrentPage={navigateToPage} />;
       case 'transactions':
         return <TransactionPage setCurrentPage={navigateToPage} />;
       case 'recordJournalEntry':
@@ -81,11 +84,17 @@ function AppLayout() {
               Invoices
             </a>
           </li>
-         
+
           <li>
             <a href="#" className={`nav-link text-white ${currentAppState.page === 'bills' || currentAppState.page === 'billForm' ? 'active' : ''}`} onClick={() => navigateToPage('bills')}>
-              <i className="bi bi-wallet-fill me-2"></i> 
+              <i className="bi bi-wallet-fill me-2"></i>
               Bills
+            </a>
+          </li>
+          <li>
+            <a href="#" className={`nav-link text-white ${currentAppState.page === 'parties-payment' ? 'active' : ''}`} onClick={() => navigateToPage('parties-payment')}>
+              <i className="bi bi-cash-coin me-2"></i> {/* Appropriate icon for payments */}
+              Parties Payment
             </a>
           </li>
           <li>
@@ -94,12 +103,6 @@ function AppLayout() {
               Transactions
             </a>
           </li>
-          {/* <li>
-            <a href="#" className={`nav-link text-white ${currentAppState.page === 'recordJournalEntry' ? 'active' : ''}`} onClick={() => navigateToPage('recordJournalEntry')}>
-              <i className="bi bi-journal-plus me-2"></i>
-              Record JE
-            </a>
-          </li> */}
           <li>
             <a href="#" className={`nav-link text-white ${currentAppState.page === 'accountTypes' ? 'active' : ''}`} onClick={() => navigateToPage('accountTypes')}>
               <i className="bi bi-bar-chart-fill me-2"></i>
@@ -112,7 +115,7 @@ function AppLayout() {
               Chart of Acc.
             </a>
           </li>
-           <li>
+          <li>
             <a href="#" className={`nav-link text-white ${currentAppState.page === 'reports' ? 'active' : ''}`} onClick={() => navigateToPage('reports')}>
               <i className="bi bi-file-earmark-text me-2"></i>
               Reports
