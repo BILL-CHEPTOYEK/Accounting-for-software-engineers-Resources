@@ -36,8 +36,6 @@ const BillLineItem = sequelize.define('BillLineItem', {
     allowNull: false,
     defaultValue: 0.00,
   },
-  // crucial for automated expense/asset posting
-  // It allows users to specify which expense/asset account each line item affects.
   account_id: {
     type: DataTypes.UUID,
     allowNull: false, // Each bill line item must be categorized
