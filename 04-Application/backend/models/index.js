@@ -11,6 +11,8 @@ const ChartOfAccount = require('./chartOfAccount');
 const Transaction = require('./transaction');
 const User = require('./user');
 const Branch = require('./branch');
+const Payment = require('./payment');
+const PaymentAllocation = require('./paymentAllocation');
 
 const db = {};
 
@@ -25,13 +27,16 @@ db.ChartOfAccount = ChartOfAccount;
 db.Transaction = Transaction;
 db.User = User;
 db.Branch = Branch;
+db.Payment = Payment;
+db.PaymentAllocation = PaymentAllocation;
 
 // Define Associations
 
-// Party associations
+// Party associations for Sales (Invoices)
 db.Party.hasMany(db.Invoice, {
   foreignKey: 'party_id',
   as: 'invoices',
+  scope: { party_type: 'Customer' },
 });
 db.Invoice.belongsTo(db.Party, {
   foreignKey: 'party_id',
@@ -41,8 +46,8 @@ db.Invoice.belongsTo(db.Party, {
 // Invoice to InvoiceLineItem association
 db.Invoice.hasMany(db.InvoiceLineItem, {
   foreignKey: 'invoice_id',
-  as: 'lineItems', // When you query an Invoice, you can include 'lineItems'
-  onDelete: 'CASCADE', // If an Invoice is deleted, its line items are too
+  as: 'lineItems',
+  onDelete: 'CASCADE',
 });
 db.InvoiceLineItem.belongsTo(db.Invoice, {
   foreignKey: 'invoice_id',
@@ -52,28 +57,29 @@ db.InvoiceLineItem.belongsTo(db.Invoice, {
 // InvoiceLineItem to ChartOfAccount association (for revenue categorization)
 db.ChartOfAccount.hasMany(db.InvoiceLineItem, {
   foreignKey: 'account_id',
-  as: 'invoiceLineItems', // A chart of account can be associated with many invoice line items
+  as: 'invoiceLineItems',
 });
 db.InvoiceLineItem.belongsTo(db.ChartOfAccount, {
   foreignKey: 'account_id',
-  as: 'account', // An invoice line item belongs to one account
+  as: 'account',
 });
 
 // Party associations for Purchases (Bills)
 db.Party.hasMany(db.Bill, {
   foreignKey: 'party_id',
-  as: 'bills', 
-  // scope: { party_type: 'Supplier' }, 
+  as: 'bills',
+  scope: { party_type: 'Supplier' },
 });
 db.Bill.belongsTo(db.Party, {
   foreignKey: 'party_id',
   as: 'party', 
 });
 
+// Bill to BillLineItem association
 db.Bill.hasMany(db.BillLineItem, {
   foreignKey: 'bill_id',
-  as: 'lineItems', 
-  onDelete: 'CASCADE', // If a Bill is deleted, its line items are too
+  as: 'lineItems',
+  onDelete: 'CASCADE',
 });
 db.BillLineItem.belongsTo(db.Bill, {
   foreignKey: 'bill_id',
@@ -83,11 +89,11 @@ db.BillLineItem.belongsTo(db.Bill, {
 // BillLineItem to ChartOfAccount association (for expense/asset categorization)
 db.ChartOfAccount.hasMany(db.BillLineItem, {
   foreignKey: 'account_id',
-  as: 'billLineItems', // A CoA can be used in many bill line items
+  as: 'billLineItems',
 });
 db.BillLineItem.belongsTo(db.ChartOfAccount, {
   foreignKey: 'account_id',
-  as: 'account', // Each bill line item belongs to one CoA account
+  as: 'account',
 });
 
 
@@ -160,5 +166,56 @@ db.User.belongsTo(db.Branch, {
   foreignKey: 'branch_id',
   as: 'branch',
 });
+
+
+// NEW: Payment Associations
+db.Party.hasMany(db.Payment, {
+  foreignKey: 'party_id',
+  as: 'payments',
+});
+db.Payment.belongsTo(db.Party, {
+  foreignKey: 'party_id',
+  as: 'party',
+});
+
+db.ChartOfAccount.hasMany(db.Payment, {
+  foreignKey: 'account_id',
+  as: 'payments',
+});
+db.Payment.belongsTo(db.ChartOfAccount, {
+  foreignKey: 'account_id',
+  as: 'account',
+});
+
+// Payment to PaymentAllocation associations
+db.Payment.hasMany(db.PaymentAllocation, {
+  foreignKey: 'payment_id',
+  as: 'allocations',
+  onDelete: 'CASCADE',
+});
+db.PaymentAllocation.belongsTo(db.Payment, {
+  foreignKey: 'payment_id',
+  as: 'payment',
+});
+
+// PaymentAllocation to Invoice/Bill associations
+db.Invoice.hasMany(db.PaymentAllocation, {
+  foreignKey: 'invoice_id',
+  as: 'paymentAllocations',
+});
+db.PaymentAllocation.belongsTo(db.Invoice, {
+  foreignKey: 'invoice_id',
+  as: 'invoice',
+});
+
+db.Bill.hasMany(db.PaymentAllocation, {
+  foreignKey: 'bill_id',
+  as: 'paymentAllocations',
+});
+db.PaymentAllocation.belongsTo(db.Bill, {
+  foreignKey: 'bill_id',
+  as: 'bill',
+});
+
 
 module.exports = db;
