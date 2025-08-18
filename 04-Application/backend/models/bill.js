@@ -35,8 +35,19 @@ const Bill = sequelize.define('Bill', {
     allowNull: false,
     defaultValue: 0.00,
   },
+  // Fields for payment tracking
+  amount_paid: {
+    type: DataTypes.DECIMAL(15, 2),
+    allowNull: false,
+    defaultValue: 0.00,
+  },
+  outstanding_balance: {
+    type: DataTypes.DECIMAL(15, 2),
+    allowNull: false,
+    defaultValue: 0.00, // Will be total_amount - amount_paid
+  },
   status: {
-    type: DataTypes.ENUM('Draft', 'Pending Approval', 'Approved', 'Paid', 'Cancelled'),
+    type: DataTypes.ENUM('Draft', 'Pending Approval', 'Approved', 'Paid', 'Cancelled', 'Partially Paid'), 
     defaultValue: 'Draft',
     allowNull: false,
   },
@@ -45,6 +56,30 @@ const Bill = sequelize.define('Bill', {
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',
+  hooks: {
+    // Before saving, ensure outstanding_balance is calculated
+    beforeSave: (bill, options) => {
+      bill.outstanding_balance = parseFloat(bill.total_amount) - parseFloat(bill.amount_paid);
+      // Update status based on payment
+      if (bill.outstanding_balance <= 0 && parseFloat(bill.total_amount) > 0 && bill.status !== 'Cancelled') {
+        bill.status = 'Paid';
+      } else if (bill.amount_paid > 0 && bill.outstanding_balance > 0 && bill.status !== 'Cancelled') {
+        bill.status = 'Partially Paid';
+      }
+    },
+    // For existing records, ensure initial outstanding_balance is set correctly
+    afterFind: (billsOrBill) => {
+      if (Array.isArray(billsOrBill)) {
+        billsOrBill.forEach(bill => {
+          if (bill && bill.total_amount !== null && bill.amount_paid !== null) {
+            bill.outstanding_balance = parseFloat(bill.total_amount) - parseFloat(bill.amount_paid);
+          }
+        });
+      } else if (billsOrBill && billsOrBill.total_amount !== null && billsOrBill.amount_paid !== null) {
+        billsOrBill.outstanding_balance = parseFloat(billsOrBill.total_amount) - parseFloat(billsOrBill.amount_paid);
+      }
+    }
+  }
 });
 
 module.exports = Bill;
