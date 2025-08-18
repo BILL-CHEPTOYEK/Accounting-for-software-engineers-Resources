@@ -18,7 +18,7 @@ const Payment = sequelize.define('Payment', {
     type: DataTypes.DATEONLY,
     allowNull: false,
   },
-  amount: { // Total amount of this payment transaction
+  amount: { 
     type: DataTypes.DECIMAL(15, 2),
     allowNull: false,
   },
