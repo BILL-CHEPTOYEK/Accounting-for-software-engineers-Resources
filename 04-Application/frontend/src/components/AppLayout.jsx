@@ -94,7 +94,7 @@ function AppLayout() {
           <li>
             <a href="#" className={`nav-link text-white ${currentAppState.page === 'parties-payment' ? 'active' : ''}`} onClick={() => navigateToPage('parties-payment')}>
               <i className="bi bi-cash-coin me-2"></i> {/* Appropriate icon for payments */}
-              Parties Payment
+              Payments
             </a>
           </li>
           <li>
