@@ -50,9 +50,6 @@ const Payment = sequelize.define('Payment', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
-  // This field indicates if the payment has been fully or partially allocated.
-  // It can be dynamically updated based on PaymentAllocations.
-  // For simplicity, we'll assume 'Applied' or 'Unapplied' based on allocation sum.
   status: {
     type: DataTypes.ENUM('Unapplied', 'Partially Applied', 'Fully Applied', 'Refunded'),
     defaultValue: 'Unapplied',
