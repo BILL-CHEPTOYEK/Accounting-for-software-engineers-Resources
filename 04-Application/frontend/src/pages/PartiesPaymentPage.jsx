@@ -282,7 +282,7 @@ function PartiesPaymentPage({ setCurrentPage }) {
 
       <form onSubmit={handleSubmit}>
         <div className="card shadow-sm p-4 mb-4">
-          <h5 className="card-title text-primary mb-3">Payment Details</h5>
+          <h5 className="card-title p-4 b-3 bg-primary text-white">Payment Details</h5>
           <div className="row g-3">
             {/* Payment Type Selection */}
             <div className="col-md-6">
