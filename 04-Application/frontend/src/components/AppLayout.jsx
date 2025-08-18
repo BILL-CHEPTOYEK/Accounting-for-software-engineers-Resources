@@ -1,4 +1,4 @@
-// /04-Application/backend/frontend/src/components/AppLayout.jsx
+// /04-Application/frontend/src/components/AppLayout.jsx
 
 import React, { useState } from 'react';
 // Import page components
