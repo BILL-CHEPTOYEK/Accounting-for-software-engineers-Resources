@@ -36,10 +36,21 @@ const Invoice = sequelize.define('Invoice', {
   },
   total_amount: {
     type: DataTypes.DECIMAL(15, 2),
-    allowNull: false, // This will be calculated from line items on create/update
+    allowNull: false,
+  },
+  // payment tracking
+  amount_paid: {
+    type: DataTypes.DECIMAL(15, 2),
+    allowNull: false,
+    defaultValue: 0.00,
+  },
+  outstanding_balance: {
+    type: DataTypes.DECIMAL(15, 2),
+    allowNull: false,
+    defaultValue: 0.00, // total_amount - amount_paid
   },
   status: {
-    type: DataTypes.ENUM('Draft', 'Received', 'Sent', 'Paid', 'Cancelled', 'Posted_Cash_Sale', 'Posted_Credit_Sale'), // Updated ENUM values
+    type: DataTypes.ENUM('Draft', 'Received', 'Sent', 'Paid', 'Cancelled', 'Posted_Cash_Sale', 'Posted_Credit_Sale', 'Partially Paid'), // Added 'Partially Paid'
     defaultValue: 'Draft',
   },
 }, {
@@ -47,6 +58,30 @@ const Invoice = sequelize.define('Invoice', {
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',
+  hooks: {
+    // Before saving, ensure outstanding_balance is calculated
+    beforeSave: (invoice, options) => {
+      invoice.outstanding_balance = parseFloat(invoice.total_amount) - parseFloat(invoice.amount_paid);
+      // Update status based on payment
+      if (invoice.outstanding_balance <= 0 && parseFloat(invoice.total_amount) > 0 && invoice.status !== 'Cancelled') {
+        invoice.status = 'Paid';
+      } else if (invoice.amount_paid > 0 && invoice.outstanding_balance > 0 && invoice.status !== 'Cancelled') {
+        invoice.status = 'Partially Paid';
+      }
+    },
+    // For existing records, ensure initial outstanding_balance is set correctly
+    afterFind: (invoicesOrInvoice) => {
+      if (Array.isArray(invoicesOrInvoice)) {
+        invoicesOrInvoice.forEach(invoice => {
+          if (invoice && invoice.total_amount !== null && invoice.amount_paid !== null) {
+            invoice.outstanding_balance = parseFloat(invoice.total_amount) - parseFloat(invoice.amount_paid);
+          }
+        });
+      } else if (invoicesOrInvoice && invoicesOrInvoice.total_amount !== null && invoicesOrInvoice.amount_paid !== null) {
+        invoicesOrInvoice.outstanding_balance = parseFloat(invoicesOrInvoice.total_amount) - parseFloat(invoicesOrInvoice.amount_paid);
+      }
+    }
+  }
 });
 
 module.exports = Invoice;
