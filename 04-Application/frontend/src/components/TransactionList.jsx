@@ -43,21 +43,21 @@ function TransactionList({ transactions, loading, error, onEdit, onViewDetails, 
   });
 
   return (
-    <div className="table-responsive shadow-sm rounded">
-      <table className="table table-hover table-striped align-middle mb-0">
+    <div className="table-responsive rounded-4 border">
+      <table className="table table-hover mb-0">
         <thead className="table-dark">
           <tr>
-            <th>Date</th>
-            <th>Journal #</th>
-            <th>Description</th>
-            <th>Branch</th>
-            <th>Added By</th>
-            <th className="text-end">Total Debit</th>
-            <th className="text-end">Total Credit</th>
-            <th className="text-center">Actions</th>
+            <th className="py-3 px-4 fw-semibold">Date</th>
+            <th className="py-3 px-4 fw-semibold">Journal #</th>
+            <th className="py-3 px-4 fw-semibold">Description</th>
+            <th className="py-3 px-4 fw-semibold">Branch</th>
+            <th className="py-3 px-4 fw-semibold">Added By</th>
+            <th className="py-3 px-4 fw-semibold text-end">Total Debit</th>
+            <th className="py-3 px-4 fw-semibold text-end">Total Credit</th>
+            <th className="py-3 px-4 fw-semibold text-center">Actions</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody style={{ backgroundColor: '#fafafa' }}>
           {sortedTransactionNos.map(transactionNo => {
             const entryLines = groupedTransactions[transactionNo];
             const firstLine = entryLines[0];

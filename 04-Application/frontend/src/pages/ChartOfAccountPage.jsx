@@ -117,18 +117,18 @@ function ChartOfAccountPage() {
           No accounts found. Click "Add New Account" to create one.
         </div>
       ) : (
-        <div className="table-responsive">
-          <table className="table table-hover table-striped shadow-sm rounded-3 overflow-hidden">
-            <thead className="bg-info text-white">
+        <div className="table-responsive rounded-4 border">
+          <table className="table table-hover mb-0">
+            <thead className="table-info">
               <tr>
-                <th scope="col">Account No.</th>
-                <th scope="col">Account Name</th>
-                <th scope="col">Account Type</th>
-                <th scope="col">Parent Account</th>
-                <th scope="col" className="text-center">Actions</th>
+                <th className="py-3 px-4 fw-semibold">Account No.</th>
+                <th className="py-3 px-4 fw-semibold">Account Name</th>
+                <th className="py-3 px-4 fw-semibold">Account Type</th>
+                <th className="py-3 px-4 fw-semibold">Parent Account</th>
+                <th className="py-3 px-4 fw-semibold text-center">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody style={{ backgroundColor: '#fafafa' }}>
               {chartOfAccounts.map((account) => (
                 <tr key={account.account_id}>
                   <td>{account.account_no}</td>

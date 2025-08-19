@@ -112,19 +112,19 @@ function UserPage() {
           No users found. Click "Add New User" to create one.
         </div>
       ) : (
-        <div className="table-responsive">
-          <table className="table table-hover table-striped shadow-sm rounded-3 overflow-hidden">
-            <thead className="bg-info text-white">
+        <div className="table-responsive rounded-4 border">
+          <table className="table table-hover mb-0">
+            <thead className="table-warning">
               <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Email</th>
-                <th scope="col">Role</th>
-                <th scope="col">Branch</th> 
-                <th scope="col">Active</th>
-                <th scope="col" className="text-center">Actions</th>
+                <th className="py-3 px-4 fw-semibold">Name</th>
+                <th className="py-3 px-4 fw-semibold">Email</th>
+                <th className="py-3 px-4 fw-semibold">Role</th>
+                <th className="py-3 px-4 fw-semibold">Branch</th> 
+                <th className="py-3 px-4 fw-semibold">Active</th>
+                <th className="py-3 px-4 fw-semibold text-center">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody style={{ backgroundColor: '#fafafa' }}>
               {users.map((user) => {
                 const userBranch = branches.find(b => b.branch_id === user.branch_id); 
                 return (

@@ -31,20 +31,20 @@ function PartyList({ parties, loading, error, onEdit, onViewDetails }) {
   }
 
   return (
-    <div className="table-responsive">
-      <table className="table table-hover table-striped shadow-sm rounded-3 overflow-hidden">
-        <thead className="bg-primary text-white">
+    <div className="table-responsive rounded-4 border">
+      <table className="table table-hover mb-0">
+        <thead className="table-success">
           <tr>
-            <th scope="col">#</th>
-            <th scope="col">First Name</th>
-            <th scope="col">Last Name</th>
-            <th scope="col">Type</th>
-            <th scope="col">Email</th>
-            <th scope="col">Phone</th>
-            <th scope="col" className="text-center">Actions</th>
+            <th className="py-3 px-4 fw-semibold">#</th>
+            <th className="py-3 px-4 fw-semibold">First Name</th>
+            <th className="py-3 px-4 fw-semibold">Last Name</th>
+            <th className="py-3 px-4 fw-semibold">Type</th>
+            <th className="py-3 px-4 fw-semibold">Email</th>
+            <th className="py-3 px-4 fw-semibold">Phone</th>
+            <th className="py-3 px-4 fw-semibold text-center">Actions</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody style={{ backgroundColor: '#fafafa' }}>
           {parties.map((party, index) => (
             <tr key={party.party_id}>
               <th scope="row">{index + 1}</th>

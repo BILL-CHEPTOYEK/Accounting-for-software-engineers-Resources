@@ -107,17 +107,17 @@ function AccountTypePage() {
           No account types found. Click "Add New Account Type" to create one.
         </div>
       ) : (
-        <div className="table-responsive">
-          <table className="table table-hover table-striped shadow-sm rounded-3 overflow-hidden">
-            <thead className="bg-primary text-white">
+        <div className="table-responsive rounded-4 border">
+          <table className="table table-hover mb-0">
+            <thead className="table-primary">
               <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Category</th>
-                <th scope="col">Normal Balance</th>
-                <th scope="col" className="text-center">Actions</th>
+                <th className="py-3 px-4 fw-semibold">Name</th>
+                <th className="py-3 px-4 fw-semibold">Category</th>
+                <th className="py-3 px-4 fw-semibold">Normal Balance</th>
+                <th className="py-3 px-4 fw-semibold text-center">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody style={{ backgroundColor: '#fafafa' }}>
               {accountTypes.map((type) => (
                 <tr key={type.account_type_id}>
                   <td>{type.name}</td>

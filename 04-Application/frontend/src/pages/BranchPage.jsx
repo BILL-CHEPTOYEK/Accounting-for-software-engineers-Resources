@@ -109,19 +109,19 @@ function BranchPage() {
           No branches found. Click "Add New Branch" to create one.
         </div>
       ) : (
-        <div className="table-responsive">
-          <table className="table table-hover table-striped shadow-sm rounded-3 overflow-hidden">
-            <thead className="bg-secondary text-white">
+        <div className="table-responsive rounded-4 border">
+          <table className="table table-hover mb-0">
+            <thead className="table-secondary">
               <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Address</th>
-                <th scope="col">Contact Person</th>
-                <th scope="col">Phone Number</th>
-                <th scope="col">Active</th>
-                <th scope="col" className="text-center">Actions</th>
+                <th className="py-3 px-4 fw-semibold">Name</th>
+                <th className="py-3 px-4 fw-semibold">Address</th>
+                <th className="py-3 px-4 fw-semibold">Contact Person</th>
+                <th className="py-3 px-4 fw-semibold">Phone Number</th>
+                <th className="py-3 px-4 fw-semibold">Active</th>
+                <th className="py-3 px-4 fw-semibold text-center">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody style={{ backgroundColor: '#fafafa' }}>
               {branches.map((branch) => (
                 <tr key={branch.branch_id}>
                   <td>{branch.name}</td>

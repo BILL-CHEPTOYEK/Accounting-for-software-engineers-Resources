@@ -31,7 +31,7 @@ function InvoiceList({ invoices, loading, error, onEdit, onViewDetails, onPostIn
   }
 
   return (
-    <div className="table-responsive rounded-4">
+    <div className="table-responsive rounded-4 border">
       <table className="table table-hover mb-0">
         <thead className="table-danger">
           <tr>
@@ -57,11 +57,13 @@ function InvoiceList({ invoices, loading, error, onEdit, onViewDetails, onPostIn
               <td>
                 <span className={`badge ${
                   invoice.status === 'Draft' ? 'bg-secondary' :
+                  invoice.status === 'Pending' ? 'bg-warning' :
                   invoice.status === 'Sent' ? 'bg-primary' :
+                  invoice.status === 'Partially Paid' ? 'bg-info' :
                   invoice.status === 'Paid' ? 'bg-success' :
+                  invoice.status === 'Overdue' ? 'bg-danger' :
                   invoice.status === 'Cancelled' ? 'bg-danger' :
-                  invoice.status === 'Posted_Cash_Sale' ? 'bg-success' : // Green for posted cash
-                  invoice.status === 'Posted_Credit_Sale' ? 'bg-info' : '' // Blue for posted credit
+                  invoice.status === 'Void' ? 'bg-dark' : 'bg-secondary'
                 }`}>
                   {invoice.status}
                 </span>

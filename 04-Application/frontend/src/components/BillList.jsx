@@ -31,7 +31,7 @@ function BillList({ bills, loading, error, onEdit, onViewDetails, onPostBill }) 
   }
 
   return (
-    <div className="table-responsive rounded-4">
+    <div className="table-responsive rounded-4 border">
       <table className="table table-hover mb-0">
         <thead className="table-primary">
           <tr>
