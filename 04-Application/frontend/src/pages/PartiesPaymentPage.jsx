@@ -1,7 +1,11 @@
 // /04-Application/backend/frontend/src/pages/PartiesPaymentPage.jsx
 
 import React, { useState, useEffect } from 'react';
+// Correct import paths for API services
 import { invoiceApi, billApi, userApi, branchApi, chartOfAccountApi } from '../services/api';
+// Using react-toastify for notifications, as suggested by your provided code's logic
+import { toast } from 'react-toastify';
+// Ensure react-toastify CSS is imported globally in your project, e.g., in src/main.jsx or src/index.js
 
 function PartiesPaymentPage({ setCurrentPage }) {
   const [paymentType, setPaymentType] = useState('customerPayment'); // 'customerPayment' or 'supplierPayment'
@@ -19,8 +23,8 @@ function PartiesPaymentPage({ setCurrentPage }) {
   const [bills, setBills] = useState([]);
   const [users, setUsers] = useState([]);
   const [branches, setBranches] = useState([]);
-  const [cashBankAccounts, setCashBankAccounts] = useState([]); // For customer receipts (debit)
-  const [liabilityAccounts, setLiabilityAccounts] = useState([]); // For supplier payments (credit) - Note: Not directly used for UI, but good to fetch
+  const [cashBankAccounts, setCashBankAccounts] = useState([]); // For customer receipts (debit) and supplier payments (credit)
+  const [liabilityAccounts, setLiabilityAccounts] = useState([]); // Fetched but not directly used in this form's UI
   const [loadingLookups, setLoadingLookups] = useState(true);
   const [lookupError, setLookupError] = useState(null);
   const [submitError, setSubmitError] = useState(null);
@@ -33,7 +37,7 @@ function PartiesPaymentPage({ setCurrentPage }) {
     document_id: '',
     payment_date: new Date().toISOString().split('T')[0],
     amount: '0.00',
-    payment_method: 'Cash',
+    payment_method: 'Cash', // Reset to default cash
     addedby: '',
     branch_id: '',
     description: '',
@@ -67,7 +71,7 @@ function PartiesPaymentPage({ setCurrentPage }) {
         setUsers(usersRes.data);
         setBranches(branchesRes.data);
 
-        // Filter for Cash/Bank accounts (Current Asset)
+        // Filter for Cash/Bank accounts (Current Asset type)
         const filteredCashBankAccounts = accountsRes.data.filter(
           account => account.accountType && account.accountType.name === 'Current Asset' &&
                      (account.name === 'Cash' || account.name === 'Bank')
@@ -76,31 +80,32 @@ function PartiesPaymentPage({ setCurrentPage }) {
 
         // Filter for Liability accounts (e.g., Accounts Payable)
         // This is fetched but not directly used in the UI dropdown for payment method
-        // in this form, as the payment method is always a cash/bank account.
         const filteredLiabilityAccounts = accountsRes.data.filter(
           account => account.accountType && account.accountType.name === 'Current Liability' &&
-                     (account.name === 'Accounts Payable') 
+                     (account.name === 'Accounts Payable')
         );
         setLiabilityAccounts(filteredLiabilityAccounts);
 
-        // Set initial defaults
+        // Set initial defaults for user and branch
         setPayment(prev => ({
           ...prev,
           addedby: usersRes.data.length > 0 ? usersRes.data[0].user_id : '',
           branch_id: branchesRes.data.length > 0 ? branchesRes.data[0].branch_id : '',
-          payment_method: paymentType === 'customerPayment' ? 'Cash' : 'Bank', 
+          // Default payment method based on type, ensuring it's a valid cash/bank account name
+          payment_method: filteredCashBankAccounts.length > 0 ? filteredCashBankAccounts[0].name : 'Cash',
         }));
 
       } catch (err) {
         console.error('Failed to fetch lookup data:', err);
         setLookupError('Failed to load necessary data. Please check your backend.');
+        toast.error('Failed to load necessary data. Please check your backend.');
       } finally {
         setLoadingLookups(false);
       }
     };
 
     fetchLookups();
-  }, [paymentType]); 
+  }, [paymentType]);
 
   // Update remaining balance when selected document or payment type changes
   useEffect(() => {
@@ -109,12 +114,12 @@ function PartiesPaymentPage({ setCurrentPage }) {
       if (paymentType === 'customerPayment') {
         const selectedInvoice = invoices.find(inv => inv.invoice_id === payment.document_id);
         if (selectedInvoice) {
-          balance = parseFloat(selectedInvoice.total_amount_due || selectedInvoice.total_amount).toFixed(2);
+          balance = parseFloat(selectedInvoice.total_amount_due || selectedInvoice.total_amount || 0).toFixed(2);
         }
       } else { // supplierPayment
         const selectedBill = bills.find(bill => bill.bill_id === payment.document_id);
         if (selectedBill) {
-          balance = parseFloat(selectedBill.total_amount_due || selectedBill.total_amount).toFixed(2);
+          balance = parseFloat(selectedBill.total_amount_due || selectedBill.total_amount || 0).toFixed(2);
         }
       }
     }
@@ -122,12 +127,14 @@ function PartiesPaymentPage({ setCurrentPage }) {
   }, [payment.document_id, paymentType, invoices, bills]);
 
   const handlePaymentTypeChange = (e) => {
-    setPaymentType(e.target.value);
+    const newPaymentType = e.target.value;
+    setPaymentType(newPaymentType);
     setPayment(prev => ({
       ...prev,
-      document_id: '',
+      document_id: '', // Reset document selection
       amount: '0.00',
-      payment_method: e.target.value === 'customerPayment' ? 'Cash' : 'Bank',
+      // Reset payment method to a default from available cash/bank accounts
+      payment_method: cashBankAccounts.length > 0 ? cashBankAccounts[0].name : 'Cash',
     }));
     setErrors({});
     setSubmitError(null);
@@ -156,10 +163,13 @@ function PartiesPaymentPage({ setCurrentPage }) {
     }
     if (isNaN(parseFloat(payment.amount)) || parseFloat(payment.amount) <= 0) {
       newErrors.amount = 'Amount must be a positive number.';
-    } else if (parseFloat(payment.amount) > parseFloat(selectedDocumentRemainingBalance)) {
+    } else if (parseFloat(payment.amount) > parseFloat(selectedDocumentRemainingBalance) + 0.001) { // Add small tolerance for floats
       newErrors.amount = `Amount cannot exceed remaining balance of $${selectedDocumentRemainingBalance}.`;
     }
-    if (!payment.payment_method) newErrors.payment_method = 'Payment Method is required.';
+    // Check if the selected payment_method name maps to a valid account ID
+    const selectedAccount = cashBankAccounts.find(acc => acc.name === payment.payment_method);
+    if (!selectedAccount) newErrors.payment_method = 'A valid Cash/Bank account is required.';
+
     if (!payment.addedby) newErrors.addedby = 'User who recorded transaction is required.';
     if (!payment.branch_id) newErrors.branch_id = 'Branch is required.';
 
@@ -173,15 +183,25 @@ function PartiesPaymentPage({ setCurrentPage }) {
     setSubmitSuccess(false);
 
     if (!validateForm()) {
+      toast.error('Please correct the errors in the form.');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     try {
+      const selectedCashBankAccount = cashBankAccounts.find(acc => acc.name === payment.payment_method);
+      if (!selectedCashBankAccount) {
+        setSubmitError(`Selected Cash/Bank account '${payment.payment_method}' not found.`);
+        toast.error(`Selected Cash/Bank account '${payment.payment_method}' not found.`);
+        return;
+      }
+
       const commonPaymentData = {
         payment_date: payment.payment_date,
         amount: parseFloat(payment.amount), // Unified amount
-        payment_method: payment.payment_method, 
+        payment_method: payment.payment_method,
+        // Using the account_id from the found cash/bank account
+        account_id: selectedCashBankAccount.account_id,
         addedby: payment.addedby,
         branch_id: payment.branch_id,
         description: payment.description,
@@ -191,50 +211,51 @@ function PartiesPaymentPage({ setCurrentPage }) {
         const selectedInvoice = invoices.find(inv => inv.invoice_id === payment.document_id);
         if (!selectedInvoice) {
           setSubmitError('Selected invoice not found.');
-          return;
-        }
-        const cashBankAccount = cashBankAccounts.find(acc => acc.name === payment.payment_method);
-        if (!cashBankAccount) {
-          setSubmitError(`Cash/Bank account for '${payment.payment_method}' not found.`);
+          toast.error('Selected invoice not found.');
           return;
         }
 
         const customerPaymentData = {
           invoice_id: payment.document_id,
+          // Explicitly adding party_id and document_no for the backend
+          party_id: selectedInvoice.party_id,
+          document_no: `PMT-INV-${selectedInvoice.document_no}-${Date.now()}`, // Unique payment document number
           ...commonPaymentData,
-          cash_bank_account_id: cashBankAccount.account_id, // This is the account being debited
-          description: payment.description || `Payment received for Invoice ${selectedInvoice.document_no}`,
+          description: payment.description || `Payment received for Invoice ${selectedInvoice.document_no} from ${selectedInvoice.party_name}`,
         };
-        await invoiceApi.recordPayment(customerPaymentData); // Call invoiceApi.recordPayment
+        await invoiceApi.recordPayment(customerPaymentData);
         setSubmitSuccess(true);
+        toast.success('Customer payment recorded successfully!');
         setPayment(initialPaymentState); // Reset form
       } else { // supplierPayment
         const selectedBill = bills.find(bill => bill.bill_id === payment.document_id);
         if (!selectedBill) {
           setSubmitError('Selected bill not found.');
-          return;
-        }
-        const cashBankAccount = cashBankAccounts.find(acc => acc.name === payment.payment_method); // This is the account being credited
-        if (!cashBankAccount) {
-          setSubmitError(`Cash/Bank account for '${payment.payment_method}' not found.`);
+          toast.error('Selected bill not found.');
           return;
         }
 
         const supplierPaymentData = {
           bill_id: payment.document_id,
+          // Explicitly adding party_id and document_no for the backend
+          party_id: selectedBill.party_id,
+          document_no: `PMT-BIL-${selectedBill.document_no}-${Date.now()}`, // Unique payment document number
           ...commonPaymentData,
-          cash_bank_account_id: cashBankAccount.account_id, // This is the account being credited
-          description: payment.description || `Payment made for Bill ${selectedBill.document_no}`,
+          description: payment.description || `Payment made for Bill ${selectedBill.document_no} to ${selectedBill.party_name}`,
         };
-        await billApi.recordPayment(supplierPaymentData); // Call billApi.recordPayment
+        await billApi.recordPayment(supplierPaymentData);
         setSubmitSuccess(true);
+        toast.success('Supplier payment recorded successfully!');
         setPayment(initialPaymentState); // Reset form
       }
       setErrors({});
+      // Assuming setCurrentPage navigates back to a list of transactions or dashboard
       setTimeout(() => setCurrentPage('transactions'), 1500);
     } catch (err) {
       console.error('Error recording payment:', err);
-      setSubmitError('Failed to record payment: ' + (err.response?.data?.error || err.message));
+      const errorMessage = 'Failed to record payment: ' + (err.response?.data?.error || err.message || 'Unknown error');
+      setSubmitError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
@@ -266,24 +287,12 @@ function PartiesPaymentPage({ setCurrentPage }) {
         </button>
       </h2>
 
-      {submitSuccess && (
-        <div className="alert alert-success alert-dismissible fade show" role="alert">
-          <i className="bi bi-check-circle-fill me-2"></i> Payment recorded successfully!
-          <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close" onClick={() => setSubmitSuccess(false)}></button>
-        </div>
-      )}
-
-      {submitError && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
-          <i className="bi bi-x-circle-fill me-2"></i> {submitError}
-          <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close" onClick={() => setSubmitError(false)}></button>
-        </div>
-      )}
+      {/* Toast messages are handled by ToastContainer */}
 
       <form onSubmit={handleSubmit}>
         <div className="card shadow-sm p-4 mb-4">
-          <h5 className="card-title p-4 b-3 bg-primary text-white">Payment Details</h5>
-          <div className="row g-3">
+          <h5 className="card-title p-4 b-3 bg-primary text-white rounded-top">Payment Details</h5>
+          <div className="row g-3 px-3 py-3"> {/* Added padding for inside card body */}
             {/* Payment Type Selection */}
             <div className="col-md-6">
               <label htmlFor="paymentType" className="form-label mb-1">Payment Type <span className="text-danger">*</span></label>
@@ -313,22 +322,33 @@ function PartiesPaymentPage({ setCurrentPage }) {
               >
                 <option value="">Select a Document</option>
                 {paymentType === 'customerPayment' ? (
-                  invoices.map(inv => (
-                    <option key={inv.invoice_id} value={inv.invoice_id}>
-                      {inv.document_no} - {new Date(inv.issue_date).toLocaleDateString()} (Due: ${parseFloat(inv.total_amount_due || inv.total_amount).toFixed(2)})
-                    </option>
-                  ))
+                  invoices.length === 0 ? (
+                    <option value="" disabled>No outstanding invoices</option>
+                  ) : (
+                    invoices.map(inv => (
+                      <option key={inv.invoice_id} value={inv.invoice_id}>
+                        {inv.document_no} - {new Date(inv.issue_date).toLocaleDateString()} (Due: ${parseFloat(inv.total_amount_due || inv.total_amount).toFixed(2)})
+                      </option>
+                    ))
+                  )
                 ) : (
-                  bills.map(bill => (
-                    <option key={bill.bill_id} value={bill.bill_id}>
-                      {bill.document_no} - {new Date(bill.issue_date).toLocaleDateString()} (Due: ${parseFloat(bill.total_amount_due || bill.total_amount).toFixed(2)})
-                    </option>
-                  ))
+                  bills.length === 0 ? (
+                    <option value="" disabled>No outstanding bills</option>
+                  ) : (
+                    bills.map(bill => (
+                      <option key={bill.bill_id} value={bill.bill_id}>
+                        {bill.document_no} - {new Date(bill.issue_date).toLocaleDateString()} (Due: ${parseFloat(bill.total_amount_due || bill.total_amount).toFixed(2)})
+                      </option>
+                    ))
+                  )
                 )}
               </select>
               {errors.document_id && <div className="invalid-feedback">{errors.document_id}</div>}
               {payment.document_id && selectedDocumentRemainingBalance > 0 && (
                  <small className="form-text text-muted mt-1">Remaining Balance: <span className="fw-bold text-info">${selectedDocumentRemainingBalance}</span></small>
+              )}
+               {payment.document_id && selectedDocumentRemainingBalance == 0 && (
+                 <small className="form-text text-muted mt-1 text-success">This document is fully paid. 🎉</small>
               )}
             </div>
 
@@ -362,7 +382,7 @@ function PartiesPaymentPage({ setCurrentPage }) {
               {errors.amount && <div className="invalid-feedback">{errors.amount}</div>}
             </div>
 
-            {/* Payment Method / Source of Funds */}
+            {/* Payment Method / Source of Funds (Cash/Bank Account) */}
             <div className="col-md-6">
               <label htmlFor="payment_method" className="form-label mb-1">
                 {paymentType === 'customerPayment' ? 'Deposit To (Cash/Bank)' : 'Pay From (Cash/Bank)'} <span className="text-danger">*</span>
@@ -375,11 +395,15 @@ function PartiesPaymentPage({ setCurrentPage }) {
                 onChange={handlePaymentChange}
               >
                 {/* Options for Cash/Bank accounts (current assets) */}
-                {cashBankAccounts.map(account => (
-                  <option key={account.account_id} value={account.name}>
-                    {account.name} ({account.account_no})
-                  </option>
-                ))}
+                {cashBankAccounts.length === 0 ? (
+                  <option value="" disabled>No Cash/Bank accounts available</option>
+                ) : (
+                  cashBankAccounts.map(account => (
+                    <option key={account.account_id} value={account.name}>
+                      {account.name} ({account.account_no})
+                    </option>
+                  ))
+                )}
               </select>
               {errors.payment_method && <div className="invalid-feedback">{errors.payment_method}</div>}
             </div>
@@ -399,6 +423,7 @@ function PartiesPaymentPage({ setCurrentPage }) {
             </div>
 
             {/* Hidden fields for backend use */}
+            {/* These should ideally be set dynamically from logged-in user context */}
             <input type="hidden" name="addedby" value={payment.addedby} />
             <input type="hidden" name="branch_id" value={payment.branch_id} />
           </div>
