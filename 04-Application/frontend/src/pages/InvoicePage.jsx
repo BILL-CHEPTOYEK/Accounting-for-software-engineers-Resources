@@ -108,42 +108,133 @@ function InvoicePage({ setCurrentPage }) { // Receive setCurrentPage from AppLay
 
   return (
     <div className="container-fluid py-4">
-      <h2 className="h3 fw-semibold text-dark mb-4 d-flex justify-content-between align-items-center">
-        <span><i className="bi bi-receipt-cutoff me-2 text-danger"></i> Invoices</span>
-        <button className="btn btn-warning text-white shadow-sm" onClick={handleCreateNewInvoice}>
-          <i className="bi bi-plus-circle me-2"></i> Create New Invoice
-        </button>
-      </h2>
+      {/* HEADER SECTION - Enhanced Design */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <div className="d-flex justify-content-between align-items-center">
+            <div>
+              <h1 className="h2 fw-bold text-dark mb-1">
+                <i className="bi bi-receipt-cutoff me-3 text-danger"></i>
+                Customer Invoices
+              </h1>
+              <p className="text-muted mb-0">
+                <i className="bi bi-info-circle me-1"></i>
+                Manage sales invoices, track payments, and post to accounting system
+              </p>
+            </div>
+            <div className="d-flex gap-2">
+              <button 
+                className="btn btn-outline-secondary"
+                onClick={() => window.location.reload()}
+                title="Refresh Data"
+              >
+                <i className="bi bi-arrow-clockwise me-1"></i>
+                <span className="d-none d-md-inline">Refresh</span>
+              </button>
+              <button 
+                className="btn btn-danger shadow-sm px-4" 
+                onClick={handleCreateNewInvoice}
+                title="Create New Invoice"
+              >
+                <i className="bi bi-plus-circle me-2"></i>
+                <span className="fw-semibold">New Invoice</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
+      {/* SUCCESS/ERROR ALERTS - Enhanced Design */}
       {postInvoiceSuccess && (
-        <div className="alert alert-success alert-dismissible fade show" role="alert">
-          <i className="bi bi-check-circle-fill me-2"></i> Invoice posted successfully!
-          <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close" onClick={() => setPostInvoiceSuccess(false)}></button>
+        <div className="row mb-3">
+          <div className="col-12">
+            <div className="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+              <div className="d-flex align-items-center">
+                <i className="bi bi-check-circle-fill me-3 fs-5"></i>
+                <div>
+                  <h6 className="mb-0 fw-semibold">Success!</h6>
+                  <small>Invoice posted successfully to accounting system</small>
+                </div>
+              </div>
+              <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close" onClick={() => setPostInvoiceSuccess(false)}></button>
+            </div>
+          </div>
         </div>
       )}
+
       {postInvoiceError && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
-          <i className="bi bi-x-circle-fill me-2"></i> {postInvoiceError}
-          <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close" onClick={() => setPostInvoiceError(false)}></button>
-        </div>
-      )}
-      {error && ( // General data loading error
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
-          <i className="bi bi-x-circle-fill me-2"></i> {error}
-          <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close" onClick={() => setError(null)}></button>
+        <div className="row mb-3">
+          <div className="col-12">
+            <div className="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+              <div className="d-flex align-items-center">
+                <i className="bi bi-exclamation-triangle-fill me-3 fs-5"></i>
+                <div>
+                  <h6 className="mb-0 fw-semibold">Error!</h6>
+                  <small>{postInvoiceError}</small>
+                </div>
+              </div>
+              <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close" onClick={() => setPostInvoiceError(false)}></button>
+            </div>
+          </div>
         </div>
       )}
 
+      {error && (
+        <div className="row mb-3">
+          <div className="col-12">
+            <div className="alert alert-warning alert-dismissible fade show shadow-sm" role="alert">
+              <div className="d-flex align-items-center">
+                <i className="bi bi-exclamation-circle-fill me-3 fs-5"></i>
+                <div>
+                  <h6 className="mb-0 fw-semibold">Connection Issue</h6>
+                  <small>{error}</small>
+                </div>
+              </div>
+              <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close" onClick={() => setError(null)}></button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* Invoice List Table */}
-      <InvoiceList
-        invoices={invoices}
-        loading={loading}
-        error={error} // Pass general error to list as well
-        onEdit={handleEditInvoice}
-        onViewDetails={handleViewDetails}
-        onPostInvoice={handleInitiatePostInvoice} // Pass the new handler for posting
-      />
+      {/* MAIN CONTENT AREA */}
+      <div className="row">
+        <div className="col-12">
+          {/* Summary Stats Card */}
+          <div className="card shadow-sm border-0 mb-4">
+            <div className="card-body py-3">
+              <div className="row align-items-center">
+                <div className="col">
+                  <h5 className="mb-0 fw-semibold text-dark">
+                    <i className="bi bi-bar-chart me-2 text-danger"></i>
+                    Overview
+                  </h5>
+                  <small className="text-muted">
+                    {loading ? 'Loading...' : `${invoices.length} ${invoices.length === 1 ? 'invoice' : 'invoices'} total`}
+                  </small>
+                </div>
+                <div className="col-auto">
+                  <div className="d-flex gap-2">
+                    <span className="badge bg-danger">Active</span>
+                    <span className="badge bg-light text-dark">{new Date().getFullYear()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Standalone Table */}
+          <div className="shadow-sm rounded-4">
+            <InvoiceList
+              invoices={invoices}
+              loading={loading}
+              error={error}
+              onEdit={handleEditInvoice}
+              onViewDetails={handleViewDetails}
+              onPostInvoice={handleInitiatePostInvoice}
+            />
+          </div>
+        </div>
+      </div>
 
       {/* Invoice Detail Modal (Remains) */}
       <InvoiceDetailModal

@@ -7,6 +7,8 @@
     "start": "node server.js",
     "dev": "npx nodemon server.js",
     "db:init": "node db-init.js",
+    "db:migrate": "node scripts/migrate-db.js",
+    "db:seed": "node seeders/seed.js",
     "migrate": "sequelize db:migrate --config config/sequelize.js"
   },
   "keywords": [],

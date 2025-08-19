@@ -59,12 +59,23 @@ const Bill = sequelize.define('Bill', {
   hooks: {
     // Before saving, ensure outstanding_balance is calculated
     beforeSave: (bill, options) => {
-      bill.outstanding_balance = parseFloat(bill.total_amount) - parseFloat(bill.amount_paid);
-      // Update status based on payment
-      if (bill.outstanding_balance <= 0 && parseFloat(bill.total_amount) > 0 && bill.status !== 'Cancelled') {
-        bill.status = 'Paid';
-      } else if (bill.amount_paid > 0 && bill.outstanding_balance > 0 && bill.status !== 'Cancelled') {
-        bill.status = 'Partially Paid';
+      const totalAmount = parseFloat(bill.total_amount) || 0;
+      const amountPaid = parseFloat(bill.amount_paid) || 0;
+      bill.outstanding_balance = totalAmount - amountPaid;
+      
+      // Update status based on payment - handle floating point precision and comprehensive transitions
+      if (bill.status !== 'Cancelled') {
+        // Use small epsilon for floating point comparison to handle precision issues
+        const epsilon = 0.01; // 1 cent tolerance
+        
+        if (Math.abs(bill.outstanding_balance) <= epsilon && totalAmount > 0) {
+          // Full payment made - set to Paid
+          bill.status = 'Paid';
+        } else if (amountPaid > epsilon && bill.outstanding_balance > epsilon) {
+          // Partial payment made - set to Partially Paid
+          bill.status = 'Partially Paid';
+        }
+        // If no payment made, status remains as is (Draft, Approved, etc.)
       }
     },
     // For existing records, ensure initial outstanding_balance is set correctly

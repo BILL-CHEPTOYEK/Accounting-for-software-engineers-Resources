@@ -45,67 +45,74 @@ function PartiesPaymentPage({ setCurrentPage }) {
 
   // Fetch lookup data on component mount
   useEffect(() => {
-    const fetchLookups = async () => {
-      try {
-        setLoadingLookups(true);
-        setLookupError(null);
-
-        const [invoicesRes, billsRes, usersRes, branchesRes, accountsRes] = await Promise.all([
-          invoiceApi.getAllInvoices(),
-          billApi.getAllBills(),
-          userApi.getAllUsers(),
-          branchApi.getAllBranches(),
-          chartOfAccountApi.getAllChartOfAccounts(),
-        ]);
-
-        // Filter invoices that are not fully paid or are in 'Posted_Credit_Sale' status
-        setInvoices(invoicesRes.data.filter(inv =>
-          (inv.status === 'Posted_Credit_Sale' || (inv.total_amount_due && parseFloat(inv.total_amount_due) > 0))
-        ));
-
-        // Filter bills that are not fully paid or are in 'Posted_Credit_Purchase' status
-        setBills(billsRes.data.filter(bill =>
-          (bill.status === 'Posted_Credit_Purchase' || (bill.total_amount_due && parseFloat(bill.total_amount_due) > 0))
-        ));
-
-        setUsers(usersRes.data);
-        setBranches(branchesRes.data);
-
-        // Filter for Cash/Bank accounts (Current Asset type)
-        const filteredCashBankAccounts = accountsRes.data.filter(
-          account => account.accountType && account.accountType.name === 'Current Asset' &&
-                     (account.name === 'Cash' || account.name === 'Bank')
-        );
-        setCashBankAccounts(filteredCashBankAccounts);
-
-        // Filter for Liability accounts (e.g., Accounts Payable)
-        // This is fetched but not directly used in the UI dropdown for payment method
-        const filteredLiabilityAccounts = accountsRes.data.filter(
-          account => account.accountType && account.accountType.name === 'Current Liability' &&
-                     (account.name === 'Accounts Payable')
-        );
-        setLiabilityAccounts(filteredLiabilityAccounts);
-
-        // Set initial defaults for user and branch
-        setPayment(prev => ({
-          ...prev,
-          addedby: usersRes.data.length > 0 ? usersRes.data[0].user_id : '',
-          branch_id: branchesRes.data.length > 0 ? branchesRes.data[0].branch_id : '',
-          // Default payment method based on type, ensuring it's a valid cash/bank account name
-          payment_method: filteredCashBankAccounts.length > 0 ? filteredCashBankAccounts[0].name : 'Cash',
-        }));
-
-      } catch (err) {
-        console.error('Failed to fetch lookup data:', err);
-        setLookupError('Failed to load necessary data. Please check your backend.');
-        toast.error('Failed to load necessary data. Please check your backend.');
-      } finally {
-        setLoadingLookups(false);
-      }
-    };
-
     fetchLookups();
   }, [paymentType]);
+
+  // Function to fetch/refresh lookup data
+  const fetchLookups = async () => {
+    try {
+      setLoadingLookups(true);
+      setLookupError(null);
+
+      const [invoicesRes, billsRes, usersRes, branchesRes, accountsRes] = await Promise.all([
+        invoiceApi.getAllInvoices(),
+        billApi.getAllBills(),
+        userApi.getAllUsers(),
+        branchApi.getAllBranches(),
+        chartOfAccountApi.getAllChartOfAccounts(),
+      ]);
+
+      // Filter invoices that have outstanding balance (not fully paid)
+      // CRITICAL: Only show unpaid invoices (exclude cash sales and fully paid invoices)
+      setInvoices(invoicesRes.data.filter(inv => {
+        const outstandingBalance = parseFloat(inv.outstanding_balance || 0);
+        // Only show invoices that need payment - exclude completed/cancelled invoices
+        const excludedStatuses = ['Cancelled', 'Draft', 'Paid', 'Void'];
+        return outstandingBalance > 0.01 && !excludedStatuses.includes(inv.status);
+      }));
+
+      // Filter bills that have outstanding balance (not fully paid)
+      setBills(billsRes.data.filter(bill => {
+        const outstandingBalance = parseFloat(bill.outstanding_balance || 0);
+        // Only show bills with positive outstanding balance and not cancelled
+        return outstandingBalance > 0.01 && bill.status !== 'Cancelled' && bill.status !== 'Draft';
+      }));
+
+      setUsers(usersRes.data);
+      setBranches(branchesRes.data);
+
+      // Filter for Cash/Bank accounts (Current Asset type)
+      const filteredCashBankAccounts = accountsRes.data.filter(
+        account => account.accountType && account.accountType.name === 'Current Asset' &&
+                   (account.name === 'Cash' || account.name === 'Bank')
+      );
+      setCashBankAccounts(filteredCashBankAccounts);
+
+      // Filter for Liability accounts (e.g., Accounts Payable)
+      // This is fetched but not directly used in the UI dropdown for payment method
+      const filteredLiabilityAccounts = accountsRes.data.filter(
+        account => account.accountType && account.accountType.name === 'Current Liability' &&
+                   (account.name === 'Accounts Payable')
+      );
+      setLiabilityAccounts(filteredLiabilityAccounts);
+
+      // Set initial defaults for user and branch
+      setPayment(prev => ({
+        ...prev,
+        addedby: usersRes.data.length > 0 ? usersRes.data[0].user_id : '',
+        branch_id: branchesRes.data.length > 0 ? branchesRes.data[0].branch_id : '',
+        // Default payment method based on type, ensuring it's a valid cash/bank account name
+        payment_method: filteredCashBankAccounts.length > 0 ? filteredCashBankAccounts[0].name : 'Cash',
+      }));
+
+    } catch (err) {
+      console.error('Failed to fetch lookup data:', err);
+      setLookupError('Failed to load necessary data. Please check your backend.');
+      toast.error('Failed to load necessary data. Please check your backend.');
+    } finally {
+      setLoadingLookups(false);
+    }
+  };
 
   // Update remaining balance when selected document or payment type changes
   useEffect(() => {
@@ -114,12 +121,12 @@ function PartiesPaymentPage({ setCurrentPage }) {
       if (paymentType === 'customerPayment') {
         const selectedInvoice = invoices.find(inv => inv.invoice_id === payment.document_id);
         if (selectedInvoice) {
-          balance = parseFloat(selectedInvoice.total_amount_due || selectedInvoice.total_amount || 0).toFixed(2);
+          balance = parseFloat(selectedInvoice.outstanding_balance || selectedInvoice.total_amount || 0).toFixed(2);
         }
       } else { // supplierPayment
         const selectedBill = bills.find(bill => bill.bill_id === payment.document_id);
         if (selectedBill) {
-          balance = parseFloat(selectedBill.total_amount_due || selectedBill.total_amount || 0).toFixed(2);
+          balance = parseFloat(selectedBill.outstanding_balance || selectedBill.total_amount || 0).toFixed(2);
         }
       }
     }
@@ -227,6 +234,9 @@ function PartiesPaymentPage({ setCurrentPage }) {
         setSubmitSuccess(true);
         toast.success('Customer payment recorded successfully!');
         setPayment(initialPaymentState); // Reset form
+        
+        // Refresh invoice/bill data to update the lists immediately
+        await fetchLookups();
       } else { // supplierPayment
         const selectedBill = bills.find(bill => bill.bill_id === payment.document_id);
         if (!selectedBill) {
@@ -247,6 +257,9 @@ function PartiesPaymentPage({ setCurrentPage }) {
         setSubmitSuccess(true);
         toast.success('Supplier payment recorded successfully!');
         setPayment(initialPaymentState); // Reset form
+        
+        // Refresh invoice/bill data to update the lists immediately
+        await fetchLookups();
       }
       setErrors({});
       // Assuming setCurrentPage navigates back to a list of transactions or dashboard

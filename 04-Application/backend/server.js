@@ -27,6 +27,20 @@ app.use(cors({
 
 
 // Database synchronization and server start
+// PRODUCTION MODE: Only authenticate connection, don't alter schemas
+db.sequelize.authenticate()
+  .then(() => {
+    console.log('✅ Database connected successfully');
+    
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🌐 Access your app at http://localhost:${PORT}`);
+    });
+  })
+  .catch(err => {
+    console.error('❌ Database connection failed:', err);
+    process.exit(1);
+  });
 db.sequelize.sync({ alter: true }) // `alter: true` will update table schemas if models change
   .then(() => {
     console.log('Database synced successfully! All tables are up-to-date. 🎉');

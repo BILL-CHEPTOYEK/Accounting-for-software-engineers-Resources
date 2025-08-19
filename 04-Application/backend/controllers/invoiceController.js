@@ -371,7 +371,7 @@ exports.postInvoice = async (req, res) => {
         branch_id: branch_id,
         addedby: addedby,
       });
-      newInvoiceStatus = 'Posted_Credit_Sale';
+      newInvoiceStatus = 'Sent'; // Credit sale - sent to customer for payment
     } else if (payment_method === 'Cash') {
       transactionsToCreate.push({
         transaction_no: newTransactionNo,
@@ -387,11 +387,28 @@ exports.postInvoice = async (req, res) => {
         branch_id: branch_id,
         addedby: addedby,
       });
-      newInvoiceStatus = 'Posted_Cash_Sale';
+      newInvoiceStatus = 'Pending'; // Will become 'Paid' via beforeSave hook
+      // ✅ CRITICAL FIX: For cash sales, mark the invoice as fully paid
+      invoice.amount_paid = invoice.total_amount;
     }
 
     await Transaction.bulkCreate(transactionsToCreate, { transaction: t });
-    await invoice.update({ status: newInvoiceStatus }, { transaction: t });
+    
+    // Update invoice with posting information and trigger beforeSave hook
+    if (payment_method === 'Cash') {
+      // For cash sales, mark as posted and paid
+      invoice.is_posted = true;
+      invoice.payment_method = 'Cash';
+      // amount_paid was already set above, save() will trigger beforeSave hook to set status to 'Paid'
+      await invoice.save({ transaction: t });
+    } else {
+      // For credit sales, mark as posted and sent
+      await invoice.update({ 
+        status: 'Sent',
+        is_posted: true,
+        payment_method: 'Credit'
+      }, { transaction: t });
+    }
 
     await t.commit();
     res.status(200).json({ message: 'Invoice posted and transactions generated successfully.', invoice_id: invoice.invoice_id, new_status: newInvoiceStatus });
@@ -575,7 +592,7 @@ exports.recordPayment = async (req, res) => {
         where: {
           party_id: party_id,
           outstanding_balance: { [Op.gt]: 0 }, // Greater than 0
-          status: { [Op.notIn]: ['Cancelled', 'Paid'] } // Exclude cancelled and already fully paid
+          status: { [Op.notIn]: ['Cancelled', 'Paid', 'Void', 'Draft'] } // Exclude non-payable statuses
         },
         order: [['due_date', 'ASC']], // Oldest first
         transaction: t,

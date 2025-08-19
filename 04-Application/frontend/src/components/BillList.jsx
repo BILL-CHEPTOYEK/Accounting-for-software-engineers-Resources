@@ -31,20 +31,20 @@ function BillList({ bills, loading, error, onEdit, onViewDetails, onPostBill }) 
   }
 
   return (
-    <div className="table-responsive">
-      <table className="table table-hover table-striped shadow-sm rounded-3 overflow-hidden">
-        <thead className="bg-primary text-white">
+    <div className="table-responsive rounded-4">
+      <table className="table table-hover mb-0">
+        <thead className="table-primary">
           <tr>
-            <th>Document No.</th>
-            <th>Supplier</th>
-            <th>Issue Date</th>
-            <th>Due Date</th>
-            <th>Total Amount</th>
-            <th>Status</th>
-            <th className="text-center">Actions</th>
+            <th className="py-3 px-4 fw-semibold">Document No.</th>
+            <th className="py-3 px-4 fw-semibold">Supplier</th>
+            <th className="py-3 px-4 fw-semibold">Issue Date</th>
+            <th className="py-3 px-4 fw-semibold">Due Date</th>
+            <th className="py-3 px-4 fw-semibold text-end">Total Amount</th>
+            <th className="py-3 px-4 fw-semibold">Status</th>
+            <th className="py-3 px-4 fw-semibold text-center">Actions</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody style={{ backgroundColor: '#fafafa' }}>
           {bills.map((bill) => (
             <tr key={bill.bill_id}>
               <td>{bill.document_no}</td>
