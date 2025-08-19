@@ -89,13 +89,86 @@ function TransactionPage({ setCurrentPage }) { // Receive setCurrentPage for nav
 
   return (
     <div className="container-fluid py-4">
-      <h2 className="h3 fw-semibold text-dark mb-4 d-flex justify-content-between align-items-center">
-        <span><i className="bi bi-wallet-fill me-2 text-success"></i> Journal Entries & Transactions</span>
-        {/* Button to navigate to the new page for creating a new Journal Entry */}
-        <button className="btn btn-success text-white shadow-sm" onClick={handleRecordNewJournalEntry}>
-          <i className="bi bi-plus-circle me-2"></i> Record New Journal Entry
-        </button>
-      </h2>
+      {/* Enhanced Header Section */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h2 className="h3 fw-bold text-dark mb-0">
+              <i className="bi bi-journal-text me-3 text-primary"></i>
+              Journal Entries & Transactions
+            </h2>
+            <button 
+              className="btn btn-primary btn-lg shadow-sm" 
+              onClick={handleRecordNewJournalEntry}
+            >
+              <i className="bi bi-plus-circle me-2"></i> Record New Journal Entry
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Summary Cards Row */}
+      {!loading && !error && transactions.length > 0 && (
+        <div className="row mb-4">
+          <div className="col-md-3">
+            <div className="card border-0 shadow-sm">
+              <div className="card-body text-center">
+                <i className="bi bi-journal-check fs-1 text-success mb-2"></i>
+                <h5 className="card-title text-muted">Total Entries</h5>
+                <h3 className="text-primary fw-bold">{Object.keys(transactions.reduce((acc, tx) => {
+                  acc[tx.transaction_no] = true;
+                  return acc;
+                }, {})).length}</h3>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-3">
+            <div className="card border-0 shadow-sm">
+              <div className="card-body text-center">
+                <i className="bi bi-arrow-up-circle fs-1 text-success mb-2"></i>
+                <h5 className="card-title text-muted">Total Debits</h5>
+                <h3 className="text-success fw-bold">${transactions.reduce((sum, tx) => sum + parseFloat(tx.debit || 0), 0).toFixed(2)}</h3>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-3">
+            <div className="card border-0 shadow-sm">
+              <div className="card-body text-center">
+                <i className="bi bi-arrow-down-circle fs-1 text-danger mb-2"></i>
+                <h5 className="card-title text-muted">Total Credits</h5>
+                <h3 className="text-danger fw-bold">${transactions.reduce((sum, tx) => sum + parseFloat(tx.credit || 0), 0).toFixed(2)}</h3>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-3">
+            <div className="card border-0 shadow-sm">
+              <div className="card-body text-center">
+                <i className="bi bi-check-circle fs-1 text-info mb-2"></i>
+                <h5 className="card-title text-muted">Posted Entries</h5>
+                <h3 className="text-info fw-bold">{transactions.filter(tx => tx.is_posted).reduce((acc, tx) => {
+                  acc[tx.transaction_no] = true;
+                  return acc;
+                }, {}) && Object.keys(transactions.filter(tx => tx.is_posted).reduce((acc, tx) => {
+                  acc[tx.transaction_no] = true;
+                  return acc;
+                }, {})).length}</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Enhanced Error Display */}
+      {error && (
+        <div className="row mb-4">
+          <div className="col-12">
+            <div className="alert alert-danger border-0 shadow-sm" role="alert">
+              <i className="bi bi-exclamation-triangle-fill me-2"></i>
+              <strong>Error:</strong> {error}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Transaction List Table */}
       <TransactionList
