@@ -38,7 +38,7 @@ function PartyPage() {
 
   // Handler for opening the Add Party modal
   const handleAddParty = () => {
-    setCurrentParty(null); // Clear any existing party data/handl
+    setCurrentParty(null); // Clear any existing party data/handle
     setShowAddEditModal(true);
   };
 
