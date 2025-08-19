@@ -44,7 +44,7 @@ function PartyPage() {
 
   // Handler for opening the Edit Party modal
   const handleEditParty = (party) => {
-    setCurrentParty(party); // Set the party da
+    setCurrentParty(party); // Set the party d
     setShowAddEditModal(true);
   };
 
