@@ -43,7 +43,7 @@ function TransactionList({ transactions, loading, error, onEdit, onViewDetails, 
   });
 
   return (
-    <div className="table-responsive rounded-4 border">
+    <div className="table-responsive rounded-3 border">
       <table className="table table-hover mb-0">
         <thead className="table-dark">
           <tr>

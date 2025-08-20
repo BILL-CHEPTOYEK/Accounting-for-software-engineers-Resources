@@ -1,4 +1,17 @@
 // /04-Application/frontend/src/components/TransactionList2.jsx
+// Double-Entry Bookkeeping Transaction Display
+// 
+// This component displays journal entries following double-entry accounting principles:
+// 1. Each row represents a complete journal entry (multiple transaction lines grouped by transaction_no)
+// 2. Every journal entry must have equal debits and credits (fundamental accounting equation)
+// 3. Debit accounts show where money/value went (expenses, assets, drawings)
+// 4. Credit accounts show where money/value came from (income, liabilities, capital)
+// 5. The total amount represents the balanced debit/credit sum
+//
+// Example: Office Supplies Purchase ($500)
+// - Debit: Office Supplies Expense ($500) - where the money went
+// - Credit: Cash Account ($500) - where the money came from
+// Result: Debits ($500) = Credits ($500) ✓
 
 import React from 'react';
 
@@ -63,16 +76,21 @@ function TransactionList2({ transactions, loading, error, onEdit, onViewDetails,
   });
 
   return (
-    <div className="table-responsive rounded-4 border shadow-sm">
+    <div className="table-responsive rounded-3 border shadow-sm">
       <table className="table table-hover mb-0">
         <thead className="table-dark">
           <tr>
             <th className="py-3 px-4 fw-semibold">Date</th>
             <th className="py-3 px-4 fw-semibold">Journal #</th>
             <th className="py-3 px-4 fw-semibold">Description</th>
-            <th className="py-3 px-4 fw-semibold text-end">Amount</th>
-            <th className="py-3 px-4 fw-semibold">Debit Account</th>
-            <th className="py-3 px-4 fw-semibold">Credit Account</th>
+            <th className="py-3 px-4 fw-semibold text-end">
+              Amount
+              <small className="d-block text-muted fw-normal" style={{ fontSize: '0.7rem' }}>
+                (Debits = Credits)
+              </small>
+            </th>
+            <th className="py-3 px-4 fw-semibold">Debit Accounts</th>
+            <th className="py-3 px-4 fw-semibold">Credit Accounts</th>
             <th className="py-3 px-4 fw-semibold text-center">Status</th>
             <th className="py-3 px-4 fw-semibold text-center">Actions</th>
           </tr>
@@ -82,6 +100,8 @@ function TransactionList2({ transactions, loading, error, onEdit, onViewDetails,
             const entryLines = groupedTransactions[transactionNo];
             const firstLine = entryLines[0];
             const totalAmount = entryLines.reduce((sum, line) => sum + parseFloat(line.debit || 0), 0);
+            const totalCredits = entryLines.reduce((sum, line) => sum + parseFloat(line.credit || 0), 0);
+            const isBalanced = Math.abs(totalAmount - totalCredits) < 0.01; // Account for floating point precision
             const isJournalEntryPosted = entryLines.some(line => line.is_posted);
 
             // Get debit and credit accounts (remove duplicates)
@@ -115,7 +135,16 @@ function TransactionList2({ transactions, loading, error, onEdit, onViewDetails,
                   </div>
                 </td>
                 <td className="py-3 px-4 text-end">
-                  <span className="fw-semibold">${totalAmount.toFixed(2)}</span>
+                  <div className="d-flex align-items-center justify-content-end">
+                    <span className="fw-semibold">${totalAmount.toFixed(2)}</span>
+                    {isBalanced ? (
+                      <i className="bi bi-check-circle-fill text-success ms-2" 
+                         title="Double-entry balanced: Debits = Credits"></i>
+                    ) : (
+                      <i className="bi bi-exclamation-triangle-fill text-warning ms-2" 
+                         title="Warning: Debits ≠ Credits"></i>
+                    )}
+                  </div>
                 </td>
                 <td className="py-3 px-4">
                   <div className="d-flex flex-wrap gap-1">
