@@ -68,13 +68,32 @@ function TransactionList({ transactions, loading, error, onEdit, onViewDetails, 
             const branch = branches.find(b => b.branch_id === firstLine.branch_id);
             const isJournalEntryPosted = entryLines.some(line => line.is_posted);
 
+            // Clean up description by removing reference numbers and limiting length
+            const cleanDescription = (desc) => {
+              if (!desc) return 'Journal Entry';
+              
+              // Remove reference patterns like (Ref: PMT-BIL-...), (Ref: INV-...), etc.
+              let cleaned = desc.replace(/\s*\(Ref:\s*[^)]+\)/gi, '');
+              
+              // Remove other common patterns that make descriptions too long
+              cleaned = cleaned.replace(/\s*\(Document:\s*[^)]+\)/gi, '');
+              cleaned = cleaned.replace(/\s*\(Reference:\s*[^)]+\)/gi, '');
+              
+              // Limit length and add ellipsis if too long
+              if (cleaned.length > 50) {
+                cleaned = cleaned.substring(0, 47) + '...';
+              }
+              
+              return cleaned.trim() || 'Journal Entry';
+            };
+
             return (
               <React.Fragment key={transactionNo}>
                 {/* Main Journal Row */}
                 <tr className="table-primary fw-semibold">
                   <td>{new Date(firstLine.date).toLocaleDateString()}</td>
                   <td>{firstLine.transaction_no}</td>
-                  <td>{firstLine.description}</td>
+                  <td>{cleanDescription(firstLine.description)}</td>
                   <td>{branch ? branch.name : 'N/A'}</td>
                   <td>{addedByUser ? `${addedByUser.first_name} ${addedByUser.last_name}` : 'N/A'}</td>
                   <td className="text-end text-danger">${totalDebits.toFixed(2)}</td>

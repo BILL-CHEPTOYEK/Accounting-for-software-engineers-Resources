@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { transactionApi, chartOfAccountApi, userApi, branchApi } from '../services/api';
 import TransactionList from '../components/TransactionList'; // Component to display the table
+import TransactionList2 from '../components/TransactionList2'; // Alternative view component
 import TransactionDetailModal from '../components/TransactionDetailModal'; // Modal for viewing full JE details
 import ReverseTransactionModal from '../components/ReverseTransactionModal'; // Modal for reversing journal entries
 
@@ -14,6 +15,7 @@ function TransactionPage({ setCurrentPage }) { // Receive setCurrentPage for nav
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [viewMode, setViewMode] = useState('detailed'); // 'detailed' or 'simplified'
 
   const [showDetailModal, setShowDetailModal] = useState(false); // Controls detail modal visibility
   const [transactionNoToView, setTransactionNoToView] = useState(null); // Holds transaction_no for detail view
@@ -111,47 +113,47 @@ function TransactionPage({ setCurrentPage }) { // Receive setCurrentPage for nav
       {!loading && !error && transactions.length > 0 && (
         <div className="row mb-4">
           <div className="col-md-3">
-            <div className="card border-0 shadow-sm">
-              <div className="card-body text-center">
-                <i className="bi bi-journal-check fs-1 text-success mb-2"></i>
-                <h5 className="card-title text-muted">Total Entries</h5>
-                <h3 className="text-primary fw-bold">{Object.keys(transactions.reduce((acc, tx) => {
+            <div className="card border-0 shadow-sm bg-primary bg-opacity-10">
+              <div className="card-body text-center py-3">
+                <i className="bi bi-journal-check fs-3 text-primary mb-2"></i>
+                <h6 className="card-title text-muted mb-1">Total Entries</h6>
+                <h4 className="text-primary fw-bold mb-0">{Object.keys(transactions.reduce((acc, tx) => {
                   acc[tx.transaction_no] = true;
                   return acc;
-                }, {})).length}</h3>
+                }, {})).length}</h4>
               </div>
             </div>
           </div>
           <div className="col-md-3">
-            <div className="card border-0 shadow-sm">
-              <div className="card-body text-center">
-                <i className="bi bi-arrow-up-circle fs-1 text-success mb-2"></i>
-                <h5 className="card-title text-muted">Total Debits</h5>
-                <h3 className="text-success fw-bold">${transactions.reduce((sum, tx) => sum + parseFloat(tx.debit || 0), 0).toFixed(2)}</h3>
+            <div className="card border-0 shadow-sm bg-success bg-opacity-10">
+              <div className="card-body text-center py-3">
+                <i className="bi bi-arrow-up-circle fs-3 text-success mb-2"></i>
+                <h6 className="card-title text-muted mb-1">Total Debits</h6>
+                <h4 className="text-success fw-bold mb-0">${transactions.reduce((sum, tx) => sum + parseFloat(tx.debit || 0), 0).toFixed(2)}</h4>
               </div>
             </div>
           </div>
           <div className="col-md-3">
-            <div className="card border-0 shadow-sm">
-              <div className="card-body text-center">
-                <i className="bi bi-arrow-down-circle fs-1 text-danger mb-2"></i>
-                <h5 className="card-title text-muted">Total Credits</h5>
-                <h3 className="text-danger fw-bold">${transactions.reduce((sum, tx) => sum + parseFloat(tx.credit || 0), 0).toFixed(2)}</h3>
+            <div className="card border-0 shadow-sm bg-info bg-opacity-10">
+              <div className="card-body text-center py-3">
+                <i className="bi bi-arrow-down-circle fs-3 text-info mb-2"></i>
+                <h6 className="card-title text-muted mb-1">Total Credits</h6>
+                <h4 className="text-info fw-bold mb-0">${transactions.reduce((sum, tx) => sum + parseFloat(tx.credit || 0), 0).toFixed(2)}</h4>
               </div>
             </div>
           </div>
           <div className="col-md-3">
-            <div className="card border-0 shadow-sm">
-              <div className="card-body text-center">
-                <i className="bi bi-check-circle fs-1 text-info mb-2"></i>
-                <h5 className="card-title text-muted">Posted Entries</h5>
-                <h3 className="text-info fw-bold">{transactions.filter(tx => tx.is_posted).reduce((acc, tx) => {
+            <div className="card border-0 shadow-sm bg-warning bg-opacity-10">
+              <div className="card-body text-center py-3">
+                <i className="bi bi-check-circle fs-3 text-warning mb-2"></i>
+                <h6 className="card-title text-muted mb-1">Posted Entries</h6>
+                <h4 className="text-warning fw-bold mb-0">{transactions.filter(tx => tx.is_posted).reduce((acc, tx) => {
                   acc[tx.transaction_no] = true;
                   return acc;
                 }, {}) && Object.keys(transactions.filter(tx => tx.is_posted).reduce((acc, tx) => {
                   acc[tx.transaction_no] = true;
                   return acc;
-                }, {})).length}</h3>
+                }, {})).length}</h4>
               </div>
             </div>
           </div>
@@ -170,18 +172,61 @@ function TransactionPage({ setCurrentPage }) { // Receive setCurrentPage for nav
         </div>
       )}
 
+      {/* View Toggle */}
+      <div className="mb-4">
+        <div className="card border-0 shadow-sm">
+          <div className="card-body p-3">
+            <div className="d-flex align-items-center">
+              <h6 className="mb-0 me-3 text-dark">View:</h6>
+              <div className="btn-group" role="group">
+                <button
+                  type="button"
+                  className={`btn ${viewMode === 'detailed' ? 'btn-primary' : 'btn-outline-primary'}`}
+                  onClick={() => setViewMode('detailed')}
+                >
+                  <i className="fas fa-list-ul me-2"></i>
+                  Detailed
+                </button>
+                <button
+                  type="button"
+                  className={`btn ${viewMode === 'simplified' ? 'btn-primary' : 'btn-outline-primary'}`}
+                  onClick={() => setViewMode('simplified')}
+                >
+                  <i className="fas fa-table me-2"></i>
+                  Accounting View
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Transaction List Table */}
-      <TransactionList
-        transactions={transactions}
-        loading={loading}
-        error={error}
-        onEdit={handleEditTransaction} // Re-added onEdit prop
-        onViewDetails={handleViewDetails} // Now passes transaction_no
-        onReverseJournalEntry={handleReverseJournalEntry}
-        accounts={accounts} // Pass accounts to list for display
-        users={users}     // Pass users to list for display
-        branches={branches} // Pass branches to list for display
-      />
+      {viewMode === 'detailed' ? (
+        <TransactionList
+          transactions={transactions}
+          loading={loading}
+          error={error}
+          onEdit={handleEditTransaction} // Re-added onEdit prop
+          onViewDetails={handleViewDetails} // Now passes transaction_no
+          onReverseJournalEntry={handleReverseJournalEntry}
+          accounts={accounts} // Pass accounts to list for display
+          users={users}     // Pass users to list for display
+          branches={branches} // Pass branches to list for display
+        />
+      ) : (
+        <TransactionList2
+          transactions={transactions}
+          loading={loading}
+          error={error}
+          onEdit={handleEditTransaction} // Re-added onEdit prop
+          onViewDetails={handleViewDetails} // Now passes transaction_no
+          onReverseJournalEntry={handleReverseJournalEntry}
+          accounts={accounts} // Pass accounts to list for display
+          users={users}     // Pass users to list for display
+          branches={branches} // Pass branches to list for display
+        />
+      )}
 
       {/* View Full Journal Entry Details Modal */}
       <TransactionDetailModal
