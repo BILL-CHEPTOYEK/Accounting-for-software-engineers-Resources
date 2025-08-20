@@ -85,9 +85,6 @@ function TransactionList2({ transactions, loading, error, onEdit, onViewDetails,
             <th className="py-3 px-4 fw-semibold">Description</th>
             <th className="py-3 px-4 fw-semibold text-end">
               Amount
-              <small className="d-block text-muted fw-normal" style={{ fontSize: '0.7rem' }}>
-                (ap)
-              </small>
             </th>
             <th className="py-3 px-4 fw-semibold">Debit Accounts</th>
             <th className="py-3 px-4 fw-semibold">Credit Accounts</th>
