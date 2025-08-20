@@ -15,6 +15,7 @@ import ChartOfAccountPage from '../pages/ChartOfAccountPage';
 import BranchPage from '../pages/BranchPage';
 import UserPage from '../pages/UserPage';
 import PartiesPaymentPage from '../pages/PartiesPaymentPage';
+import ReportsPage from '../pages/ReportsPage';
 
 function AppLayout() {
   const [currentAppState, setCurrentAppState] = useState({ page: 'home', data: null });
@@ -47,6 +48,8 @@ function AppLayout() {
         return <AccountTypePage />;
       case 'chartOfAccounts':
         return <ChartOfAccountPage />;
+      case 'reports':
+        return <ReportsPage />;
       case 'branches':
         return <BranchPage />;
       case 'users':

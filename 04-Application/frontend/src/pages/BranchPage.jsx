@@ -109,7 +109,7 @@ function BranchPage() {
           No branches found. Click "Add New Branch" to create one.
         </div>
       ) : (
-        <div className="table-responsive rounded-4 border">
+        <div className="table-responsive rounded-3 border">
           <table className="table table-hover mb-0">
             <thead className="table-secondary">
               <tr>
