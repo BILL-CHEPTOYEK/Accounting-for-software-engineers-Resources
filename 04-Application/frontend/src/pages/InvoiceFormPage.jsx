@@ -294,7 +294,7 @@ function InvoiceFormPage({ setCurrentPage, invoiceToEdit }) {
   }
 
   return (
-    <div className="container-fluid py-4">
+    <div className="container-fluid py-4">()
       {submitSuccess && (
         <div className="alert alert-success alert-dismissible fade show" role="alert">
           <i className="bi bi-check-circle-fill me-2"></i> Invoice {isEditMode ? 'updated' : 'created'} successfully!
