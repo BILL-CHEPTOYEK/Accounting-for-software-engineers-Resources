@@ -168,13 +168,20 @@ function ReportsPage() {
                           </td>
                           <td style={{ verticalAlign: 'top' }}>{new Date(tx.date).toLocaleDateString()}</td>
                           <td style={{ verticalAlign: 'top' }}>
-                            <span className="badge bg-secondary small">{tx.transaction_no}</span>
+                            <div className="small" style={{ 
+                              wordBreak: 'break-all',
+                              lineHeight: '1.3',
+                              maxWidth: '130px',
+                              fontSize: '0.75rem'
+                            }}>
+                              {tx.transaction_no}
+                            </div>
                           </td>
                           <td style={{ verticalAlign: 'top' }}>
                             <div className="small" style={{ 
                               lineHeight: '1.4',
                               wordBreak: 'break-word',
-                              maxWidth: '300px'
+                              maxWidth: '250px'
                             }}>
                               {tx.description}
                             </div>
@@ -330,18 +337,24 @@ function ReportsPage() {
                       <strong>To fix this imbalance:</strong>
                     </p>
                     <ol className="mb-2 text-start small">
+                      <li>Go to <strong>Chart of Accounts</strong> page</li>
+                      <li>Add equity accounts if missing:
+                        <ul>
+                          <li><strong>Owner's Capital</strong> (Account Type: Equity)</li>
+                          <li><strong>Retained Earnings</strong> (Account Type: Equity)</li>
+                        </ul>
+                      </li>
                       <li>Go to <strong>Transactions</strong> page</li>
-                      <li>Click <strong>"Record New Journal Entry"</strong></li>
                       <li>Create initial capital entry:
                         <ul>
-                          <li><strong>Debit:</strong> Cash (or other assets you started with)</li>
-                          <li><strong>Credit:</strong> Owner's Capital (Account 3001)</li>
+                          <li><strong>Debit:</strong> Cash (or assets you started with)</li>
+                          <li><strong>Credit:</strong> Owner's Capital</li>
                         </ul>
                       </li>
                       <li>Post the transaction to make it official</li>
                     </ol>
                     <p className="mb-0">
-                      <strong>Note:</strong> The "Owner's Capital" equity account is already set up in your Chart of Accounts (3001)
+                      <strong>Note:</strong> Every business needs initial equity entries to balance the books
                     </p>
                   </div>
                 )}

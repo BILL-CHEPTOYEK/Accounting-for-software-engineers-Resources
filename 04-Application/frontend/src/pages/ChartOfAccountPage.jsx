@@ -135,7 +135,18 @@ function ChartOfAccountPage() {
                   <td>{account.name}</td>
                   <td>{account.accountType ? account.accountType.name : 'N/A'}</td>
                   <td>
-                    {account.parentAccount ? `${account.parentAccount.account_no} - ${account.parentAccount.name}` : 'N/A'}
+                    {(() => {
+                      // Try to find parent account from the list if parentAccount object is not available
+                      if (account.parentAccount) {
+                        return `${account.parentAccount.account_no} - ${account.parentAccount.name}`;
+                      } else if (account.parent_id) {
+                        // Fallback: find parent from the chartOfAccounts list
+                        const parentAccount = chartOfAccounts.find(acc => acc.account_id === account.parent_id);
+                        return parentAccount ? `${parentAccount.account_no} - ${parentAccount.name}` : 'Parent not found';
+                      } else {
+                        return 'N/A';
+                      }
+                    })()}
                   </td>
                   <td className="text-center">
                     <button

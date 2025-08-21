@@ -1,22 +1,22 @@
-// /04-Application/backend/frontend/src/pages/RecordJournalEntryPage.jsx
+// /04-Application/frontend/src/pages/RecordJournalEntryPageNew.jsx
 
 import React, { useState, useEffect } from 'react';
 import { transactionApi, chartOfAccountApi, userApi, branchApi } from '../services/api';
 
-function RecordJournalEntryPage({ setCurrentPage, transactionToEdit }) { // Receive transactionToEdit prop
+function RecordJournalEntryPage({ setCurrentPage, transactionToEdit }) {
   // Initial state for a new journal entry
   const initialJournalEntryState = {
-    transaction_no: '',
+    transaction_no: `TXN-${Date.now()}`,
     transaction_type: 'Journal Entry',
-    date: new Date().toISOString().split('T')[0], // Default to today's date
-    description: '', // Overall JE description
+    date: new Date().toISOString().split('T')[0],
+    description: '',
     reference_no: '',
-    is_posted: true, // Default to posted for new entries, though user might change for drafts
-    addedby: '', // Will be auto-filled by login later
-    branch_id: '', // Will be auto-filled by login later
+    is_posted: true,
+    addedby: '',
+    branch_id: '',
     lines: [
       { account_id: '', amount: '', debit: '', credit: '', description: '' },
-      { account_id: '', amount: '', debit: '', credit: '', description: '' } // Start with two lines for double-entry clarity
+      { account_id: '', amount: '', debit: '', credit: '', description: '' }
     ]
   };
 
@@ -27,13 +27,13 @@ function RecordJournalEntryPage({ setCurrentPage, transactionToEdit }) { // Rece
   const [loadingLookups, setLoadingLookups] = useState(true);
   const [lookupError, setLookupError] = useState(null);
   const [submitError, setSubmitError] = useState(null);
-  const [submitSuccess, setSubmitSuccess] = useState(false); // To show success message
-  const [showConfirmation, setShowConfirmation] = useState(false); // For confirmation before submit
-  const [errors, setErrors] = useState({}); // <-- THIS LINE MUST BE PRESENT AND CORRECTLY PLACED
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isEditMode = !!transactionToEdit; // Determine if we are in edit mode
+  const isEditMode = !!transactionToEdit;
 
-  // Fetch lookup data (accounts, users, branches) on component mount
+  // Fetch lookup data
   useEffect(() => {
     const fetchLookups = async () => {
       try {
@@ -48,65 +48,49 @@ function RecordJournalEntryPage({ setCurrentPage, transactionToEdit }) { // Rece
         setUsers(usersRes.data);
         setBranches(branchesRes.data);
 
-        // Set initial defaults for addedby and branch_id if data available for NEW entry
         if (!isEditMode) {
-            setJournalEntry(prev => ({
-                ...prev,
-                addedby: usersRes.data.length > 0 ? usersRes.data[0].user_id : '',
-                branch_id: branchesRes.data.length > 0 ? branchesRes.data[0].branch_id : '',
-            }));
+          setJournalEntry(prev => ({
+            ...prev,
+            addedby: usersRes.data.length > 0 ? usersRes.data[0].user_id : '',
+            branch_id: branchesRes.data.length > 0 ? branchesRes.data[0].branch_id : '',
+          }));
         }
-
       } catch (err) {
         console.error('Failed to fetch lookup data:', err);
-        setLookupError('Failed to load necessary data (accounts, users, branches). Please check your backend.');
+        setLookupError('Failed to load necessary data. Please check your backend.');
       } finally {
         setLoadingLookups(false);
       }
     };
 
     fetchLookups();
-  }, [isEditMode]); // Depend on isEditMode to re-fetch if mode changes (though typically only once)
+  }, [isEditMode]);
 
-  // Effect to populate form data when 'transactionToEdit' prop changes (for editing a single line)
+  // Populate form for editing
   useEffect(() => {
     if (isEditMode && transactionToEdit) {
-      // If in edit mode, initialize with the single transaction line provided
       setJournalEntry({
         transaction_no: transactionToEdit.transaction_no || '',
         transaction_type: transactionToEdit.transaction_type || 'Journal Entry',
         date: transactionToEdit.date || new Date().toISOString().split('T')[0],
-        description: transactionToEdit.description || '', // Overall JE description
+        description: transactionToEdit.description || '',
         reference_no: transactionToEdit.reference_no || '',
-        is_posted: transactionToEdit.is_posted || true,
-        addedby: transactionToEdit.addedby || (users.length > 0 ? users[0].user_id : ''),
-        branch_id: transactionToEdit.branch_id || (branches.length > 0 ? branches[0].branch_id : ''),
+        is_posted: transactionToEdit.is_posted ?? true,
+        addedby: transactionToEdit.addedby || '',
+        branch_id: transactionToEdit.branch_id || '',
         lines: [
           {
-            transaction_id: transactionToEdit.transaction_id, // Keep ID for update
             account_id: transactionToEdit.account_id || '',
-            amount: parseFloat(transactionToEdit.amount) || '',
-            debit: parseFloat(transactionToEdit.debit) || '',
-            credit: parseFloat(transactionToEdit.credit) || '',
-            description: transactionToEdit.description || '', // Line-specific description
+            amount: transactionToEdit.amount?.toString() || '',
+            debit: transactionToEdit.debit?.toString() || '',
+            credit: transactionToEdit.credit?.toString() || '',
+            description: transactionToEdit.description || ''
           }
         ]
       });
-    } else if (!isEditMode) {
-      // Reset form for adding new journal entry (only if not already set by initial useEffect)
-       setJournalEntry(initialJournalEntryState);
-       if (users.length > 0) initialJournalEntryState.addedby = users[0].user_id;
-       if (branches.length > 0) initialJournalEntryState.branch_id = branches[0].branch_id;
     }
-    setErrors({}); // Clear errors when mode changes
-  }, [transactionToEdit, isEditMode, users, branches]); // Re-run when transactionToEdit or mode changes
+  }, [isEditMode, transactionToEdit]);
 
-  // Calculate totals for validation display
-  const totalDebits = journalEntry.lines.reduce((sum, line) => sum + parseFloat(line.debit || 0), 0);
-  const totalCredits = journalEntry.lines.reduce((sum, line) => sum + parseFloat(line.credit || 0), 0);
-  const isBalanced = Math.abs(totalDebits - totalCredits) < 0.01; // Tolerance for float precision
-
-  // --- Handlers for form fields and lines ---
   const handleJournalEntryChange = (e) => {
     const { name, value, type, checked } = e.target;
     setJournalEntry(prev => ({
@@ -117,28 +101,15 @@ function RecordJournalEntryPage({ setCurrentPage, transactionToEdit }) { // Rece
     setSubmitSuccess(false);
   };
 
-  const handleLineChange = (index, e) => {
-    const { name, value } = e.target;
+  const handleLineChange = (index, field, value) => {
     const newLines = [...journalEntry.lines];
-    const parsedValue = parseFloat(value);
+    newLines[index][field] = value;
 
-    if (name === 'debit') {
-        newLines[index].debit = isNaN(parsedValue) ? '' : parsedValue;
-        newLines[index].credit = ''; // Clear credit if debit is entered
-        newLines[index].amount = isNaN(parsedValue) ? '' : parsedValue;
-    } else if (name === 'credit') {
-        newLines[index].credit = isNaN(parsedValue) ? '' : parsedValue;
-        newLines[index].debit = ''; // Clear debit if credit is entered
-        newLines[index].amount = isNaN(parsedValue) ? '' : parsedValue;
-    } else if (name === 'amount') {
-        newLines[index].amount = isNaN(parsedValue) ? '' : parsedValue;
-        if (newLines[index].debit > 0) {
-            newLines[index].debit = isNaN(parsedValue) ? '' : parsedValue;
-        } else if (newLines[index].credit > 0) {
-            newLines[index].credit = isNaN(parsedValue) ? '' : parsedValue;
-        }
-    } else {
-        newLines[index][name] = value;
+    // Clear opposite field when entering debit/credit
+    if (field === 'debit' && value) {
+      newLines[index].credit = '';
+    } else if (field === 'credit' && value) {
+      newLines[index].debit = '';
     }
 
     setJournalEntry(prev => ({
@@ -160,8 +131,8 @@ function RecordJournalEntryPage({ setCurrentPage, transactionToEdit }) { // Rece
   };
 
   const handleRemoveLine = (index) => {
-    if (journalEntry.lines.length <= 1) {
-      alert('A journal entry must have at least one line.');
+    if (journalEntry.lines.length <= 2) {
+      alert('A journal entry must have at least two lines.');
       return;
     }
     setJournalEntry(prev => ({
@@ -170,94 +141,76 @@ function RecordJournalEntryPage({ setCurrentPage, transactionToEdit }) { // Rece
     }));
   };
 
-  // --- Validation Logic ---
+  const getTotalDebits = () => {
+    return journalEntry.lines.reduce((total, line) => {
+      return total + (parseFloat(line.debit) || 0);
+    }, 0);
+  };
+
+  const getTotalCredits = () => {
+    return journalEntry.lines.reduce((total, line) => {
+      return total + (parseFloat(line.credit) || 0);
+    }, 0);
+  };
+
   const validateForm = () => {
     const newErrors = {};
-    const today = new Date().toISOString().split('T')[0];
 
-    // Overall Journal Entry Validation (applies to both new and edit modes, but read-only in edit)
-    if (!journalEntry.transaction_no.trim()) newErrors.transaction_no = 'Journal Entry Number is required.';
-    if (!journalEntry.transaction_type.trim()) newErrors.transaction_type = 'Transaction Type is required.';
-    if (!journalEntry.date) {
-        newErrors.date = 'Date is required.';
-    } else if (journalEntry.date > today) {
-        newErrors.date = 'Date cannot be in the future.';
-    }
-    if (!journalEntry.addedby) newErrors.addedby = 'User (Recorded By) is required.';
-    if (!journalEntry.branch_id) newErrors.branch_id = 'Branch is required.';
+    if (!journalEntry.date) newErrors.date = 'Date is required';
+    if (!journalEntry.description.trim()) newErrors.description = 'Description is required';
+    if (!journalEntry.addedby) newErrors.addedby = 'User is required';
+    if (!journalEntry.branch_id) newErrors.branch_id = 'Branch is required';
 
-    // Line-item Validation
-    const lineErrors = journalEntry.lines.map((line, index) => {
-      const lineSpecificErrors = {};
-      if (!line.account_id) lineSpecificErrors.account_id = 'Account is required.';
-      if (isNaN(parseFloat(line.amount)) || parseFloat(line.amount) <= 0) {
-        lineSpecificErrors.amount = 'Amount must be a positive number.';
+    // Validate lines
+    journalEntry.lines.forEach((line, index) => {
+      if (!line.account_id) {
+        newErrors[`line_${index}_account_id`] = 'Account is required';
       }
-
-      const hasDebit = parseFloat(line.debit) > 0;
-      const hasCredit = parseFloat(line.credit) > 0;
-
-      if (!hasDebit && !hasCredit) {
-          lineSpecificErrors.debitCredit = 'Must be either Debit OR Credit.';
-      } else if (hasDebit && hasCredit) {
-          lineSpecificErrors.debitCredit = 'Cannot be both Debit and Credit.';
+      if (!line.description.trim()) {
+        newErrors[`line_${index}_description`] = 'Line description is required';
       }
-
-      if (hasDebit && parseFloat(line.debit) !== parseFloat(line.amount)) {
-          lineSpecificErrors.debitAmountMismatch = 'Debit must match Amount.';
+      const debit = parseFloat(line.debit) || 0;
+      const credit = parseFloat(line.credit) || 0;
+      if (debit === 0 && credit === 0) {
+        newErrors[`line_${index}_amount`] = 'Either debit or credit amount is required';
       }
-      if (hasCredit && parseFloat(line.credit) !== parseFloat(line.amount)) {
-          lineSpecificErrors.creditAmountMismatch = 'Credit must match Amount.';
+      if (debit > 0 && credit > 0) {
+        newErrors[`line_${index}_amount`] = 'Cannot have both debit and credit amounts';
       }
-
-      if (line.account_id && !accounts.some(acc => acc.account_id === line.account_id)) {
-        lineSpecificErrors.account_id_invalid = 'Selected account does not exist.';
-      }
-      return Object.keys(lineSpecificErrors).length > 0 ? lineSpecificErrors : null;
     });
 
-    if (lineErrors.some(err => err !== null)) {
-      newErrors.lines = lineErrors;
+    // Check if debits equal credits
+    if (getTotalDebits() !== getTotalCredits()) {
+      newErrors.balance = 'Total debits must equal total credits';
     }
 
-    // Double-Entry Balance Validation (only for new entries)
-    if (!isEditMode && !isBalanced) { // Only enforce strict balance check for new full journal entries
-      newErrors.balance = 'Total Debits and Total Credits must be equal.';
+    if (getTotalDebits() === 0) {
+      newErrors.balance = 'Journal entry cannot have zero amounts';
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0 && !newErrors.lines;
+    return Object.keys(newErrors).length === 0;
   };
 
-  // --- Submission Logic ---
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitError(null);
-    setSubmitSuccess(false);
-
-    if (validateForm()) {
-      setShowConfirmation(true);
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    if (!validateForm()) {
+      return;
     }
-  };
 
-  const confirmSubmit = async () => {
-    setShowConfirmation(false);
+    setIsSubmitting(true);
+    setSubmitError(null);
 
     try {
       if (isEditMode) {
-        // If in edit mode, submit only the *single* modified line
         const updatedLineData = {
-          transaction_id: transactionToEdit.transaction_id, // Ensure ID is sent for update
+          transaction_id: transactionToEdit.transaction_id,
           account_id: journalEntry.lines[0].account_id,
           amount: parseFloat(journalEntry.lines[0].amount),
           debit: parseFloat(journalEntry.lines[0].debit),
           credit: parseFloat(journalEntry.lines[0].credit),
           description: journalEntry.lines[0].description,
-          // Common JE fields (transaction_no, date, branch_id, addedby, is_posted)
-          // are read-only and already part of the original transaction,
-          // but we include them here as a safeguard if the backend requires them for validation.
           transaction_no: journalEntry.transaction_no,
           transaction_type: journalEntry.transaction_type,
           date: journalEntry.date,
@@ -267,338 +220,387 @@ function RecordJournalEntryPage({ setCurrentPage, transactionToEdit }) { // Rece
           branch_id: journalEntry.branch_id,
         };
         await transactionApi.updateTransaction(transactionToEdit.transaction_id, updatedLineData);
-        setSubmitSuccess(true);
-        // Optionally navigate back after success in edit mode
-        setTimeout(() => setCurrentPage('transactions'), 1500);
-
       } else {
-        // For new journal entry, map lines to include common JE fields
-        const dataToSubmit = journalEntry.lines.map(line => ({
-          ...line,
-          transaction_no: journalEntry.transaction_no,
-          transaction_type: journalEntry.transaction_type,
-          date: journalEntry.date,
-          description: line.description || journalEntry.description,
-          reference_no: journalEntry.reference_no,
-          is_posted: journalEntry.is_posted,
-          addedby: journalEntry.addedby,
-          branch_id: journalEntry.branch_id,
-        }));
+        // Generate transaction number if not provided
+        const transactionNo = journalEntry.transaction_no || `TXN-${Date.now()}`;
+        
+        const dataToSubmit = journalEntry.lines.map(line => {
+          const debitAmount = parseFloat(line.debit) || 0;
+          const creditAmount = parseFloat(line.credit) || 0;
+          const amount = debitAmount || creditAmount; // Use whichever is non-zero as the amount
+          
+          return {
+            account_id: line.account_id,
+            amount: amount,
+            debit: debitAmount,
+            credit: creditAmount,
+            transaction_no: transactionNo,
+            transaction_type: journalEntry.transaction_type || 'Journal Entry',
+            date: journalEntry.date,
+            description: line.description || journalEntry.description || 'Journal Entry',
+            reference_no: journalEntry.reference_no || '',
+            is_posted: journalEntry.is_posted !== undefined ? journalEntry.is_posted : true,
+            addedby: journalEntry.addedby || 1, // Default to admin user
+            branch_id: journalEntry.branch_id || 1, // Default to first branch
+          };
+        });
+        
+        console.log('Data to submit:', dataToSubmit); // Debug log
         await transactionApi.createTransaction(dataToSubmit);
-        setSubmitSuccess(true);
-        setJournalEntry(initialJournalEntryState); // Reset form for new entry
-        // Reset initial defaults for addedby and branch_id for the next new entry
-        if (users.length > 0) initialJournalEntryState.addedby = users[0].user_id;
-        if (branches.length > 0) initialJournalEntryState.branch_id = branches[0].branch_id;
+        setJournalEntry(initialJournalEntryState);
       }
-
+      
+      setSubmitSuccess(true);
+      setTimeout(() => setCurrentPage('transactions'), 1500);
     } catch (err) {
       console.error('Error in transaction submission:', err);
       setSubmitError('Failed to record Journal Entry: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   if (loadingLookups) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
-        <p className="ms-3 text-primary">Loading necessary data...</p>
       </div>
     );
   }
 
   if (lookupError) {
     return (
-      <div className="alert alert-danger text-center" role="alert">
+      <div className="alert alert-danger" role="alert">
+        <i className="bi bi-exclamation-triangle-fill me-2"></i>
         {lookupError}
       </div>
     );
   }
 
   return (
-    <div className="container-fluid py-4">
-      <h2 className="h3 fw-semibold text-dark mb-4 d-flex justify-content-between align-items-center">
-        <span><i className="bi bi-journal-plus me-2 text-success"></i> {isEditMode ? 'Edit Transaction Line' : 'Record New Journal Entry'}</span>
-        <button className="btn btn-secondary shadow-sm" onClick={() => setCurrentPage('transactions', null)}>
-          <i className="bi bi-arrow-left-circle me-2"></i> Back to Transactions List
+    <div className="container-fluid px-4">
+      {/* Header */}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h3 className="text-dark mb-1">
+            <i className="bi bi-journal-plus me-2"></i>
+            {isEditMode ? 'Edit Journal Entry' : 'Record New Journal Entry'}
+          </h3>
+          <p className="text-muted mb-0">
+            {isEditMode ? 'Update existing journal entry' : 'Enter journal entry lines first, then transaction details below'}
+          </p>
+        </div>
+        <button
+          type="button"
+          className="btn btn-outline-secondary"
+          onClick={() => setCurrentPage('transactions', null)}
+        >
+          <i className="bi bi-arrow-left me-2"></i>Back to Transactions
         </button>
-      </h2>
+      </div>
 
+      {/* Success Message */}
       {submitSuccess && (
         <div className="alert alert-success alert-dismissible fade show" role="alert">
-          <i className="bi bi-check-circle-fill me-2"></i> {isEditMode ? 'Transaction line updated successfully!' : 'Journal Entry recorded successfully!'}
-          <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close" onClick={() => setSubmitSuccess(false)}></button>
+          <i className="bi bi-check-circle-fill me-2"></i>
+          Journal Entry {isEditMode ? 'updated' : 'recorded'} successfully! Redirecting...
+          <button type="button" className="btn-close" onClick={() => setSubmitSuccess(false)}></button>
         </div>
       )}
 
+      {/* Error Message */}
       {submitError && (
         <div className="alert alert-danger alert-dismissible fade show" role="alert">
           <i className="bi bi-x-circle-fill me-2"></i> {submitError}
-          <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close" onClick={() => setSubmitError(false)}></button>
+          <button type="button" className="btn-close" onClick={() => setSubmitError(null)}></button>
         </div>
       )}
 
-      <div className="card shadow-sm p-4 mb-4">
-        <h5 className="card-title text-primary mb-3">{isEditMode ? 'Original Journal Entry Details (Read-Only)' : 'Overall Journal Entry Details'}</h5>
-        <div className="row">
-          <div className="col-md-6 mb-3">
-            <label htmlFor="transaction_no" className="form-label">Journal Entry #</label>
-            <input
-              type="text"
-              className={`form-control ${errors.transaction_no ? 'is-invalid' : ''}`}
-              id="transaction_no"
-              name="transaction_no"
-              value={journalEntry.transaction_no}
-              onChange={handleJournalEntryChange}
-              placeholder="e.g., JE-2025-001"
-              readOnly={isEditMode} // Read-only in edit mode
-            />
-            {errors.transaction_no && <div className="invalid-feedback">{errors.transaction_no}</div>}
-          </div>
-          <div className="col-md-6 mb-3">
-            <label htmlFor="date" className="form-label">Date</label>
-            <input
-              type="date"
-              className={`form-control ${errors.date ? 'is-invalid' : ''}`}
-              id="date"
-              name="date"
-              value={journalEntry.date}
-              onChange={handleJournalEntryChange}
-              readOnly={isEditMode} // Read-only in edit mode
-            />
-            {errors.date && <div className="invalid-feedback">{errors.date}</div>}
-          </div>
+      {/* Balance Error */}
+      {errors.balance && (
+        <div className="alert alert-warning alert-dismissible fade show" role="alert">
+          <i className="bi bi-exclamation-triangle-fill me-2"></i> {errors.balance}
+          <button type="button" className="btn-close" onClick={() => setErrors(prev => ({ ...prev, balance: null }))}></button>
         </div>
+      )}
 
-        <div className="row">
-          <div className="col-md-6 mb-3">
-            <label htmlFor="branch_id" className="form-label">Branch</label>
-            <select
-              className={`form-select ${errors.branch_id ? 'is-invalid' : ''}`}
-              id="branch_id"
-              name="branch_id"
-              value={journalEntry.branch_id}
-              onChange={handleJournalEntryChange}
-              disabled={isEditMode} // Disabled in edit mode
-            >
-              <option value="">Select Branch</option>
-              {branches.map(branch => (
-                <option key={branch.branch_id} value={branch.branch_id}>
-                  {branch.name}
-                </option>
-              ))}
-            </select>
-            {errors.branch_id && <div className="invalid-feedback">{errors.branch_id}</div>}
-            {!isEditMode && <small className="form-text text-muted">This will be auto-selected based on login once implemented.</small>}
-          </div>
-          <div className="col-md-6 mb-3">
-            <label htmlFor="addedby" className="form-label">Recorded By (User)</label>
-            <select
-              className={`form-select ${errors.addedby ? 'is-invalid' : ''}`}
-              id="addedby"
-              name="addedby"
-              value={journalEntry.addedby}
-              onChange={handleJournalEntryChange}
-              disabled={isEditMode} // Disabled in edit mode
-            >
-              <option value="">Select User</option>
-              {users.map(user => (
-                <option key={user.user_id} value={user.user_id}>
-                  {user.first_name} {user.last_name} ({user.email})
-                </option>
-              ))}
-            </select>
-            {errors.addedby && <div className="invalid-feedback">{errors.addedby}</div>}
-            {!isEditMode && <small className="form-text text-muted">This will be auto-selected based on login once implemented.</small>}
-          </div>
-        </div>
-
-        <div className="mb-3">
-          <label htmlFor="description" className="form-label">Overall Journal Entry Description</label>
-          <textarea
-            className="form-control"
-            id="description"
-            name="description"
-            rows="2"
-            value={journalEntry.description}
-            onChange={handleJournalEntryChange}
-            placeholder="e.g., Record monthly sales, Pay utility bill, Transfer funds"
-            readOnly={isEditMode} // Read-only in edit mode
-          ></textarea>
-        </div>
-
-        <div className="mb-3 form-check">
-          <input
-            type="checkbox"
-            className="form-check-input"
-            id="is_posted"
-            name="is_posted"
-            checked={journalEntry.is_posted}
-            onChange={handleJournalEntryChange}
-            disabled={isEditMode} // Disabled in edit mode
-          />
-          <label className="form-check-label" htmlFor="is_posted">Is Posted (Finalized)</label>
-          <small className="form-text text-muted d-block">Once posted, transactions cannot be edited directly, only reversed.</small>
-        </div>
-      </div>
-
-      {/* Transaction Lines Section */}
-      <div className="card shadow-sm p-4 mb-4">
-        <h5 className="card-title text-primary mb-3">{isEditMode ? 'Edit Individual Line Details' : 'Journal Entry Lines'}</h5>
-        {journalEntry.lines.map((line, index) => (
-          <div key={line.transaction_id || index} className="card mb-3 p-3 shadow-sm border">
-            <div className="d-flex justify-content-between align-items-center mb-2">
-              <h6 className="mb-0">Line {index + 1}</h6>
-              {!isEditMode && journalEntry.lines.length > 1 && (
-                <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => handleRemoveLine(index)}>
-                  <i className="bi bi-x-circle me-1"></i> Remove Line
-                </button>
-              )}
+      <form onSubmit={handleSubmit}>
+        {/* JOURNAL ENTRY LINES SECTION - COMES FIRST */}
+        <div className="card shadow-sm mb-4">
+          <div className="card-header bg-primary text-white">
+            <div className="d-flex justify-content-between align-items-center">
+              <h5 className="mb-0">
+                <i className="bi bi-list-ul me-2"></i>Journal Entry Lines
+              </h5>
+              <button
+                type="button"
+                className="btn btn-light btn-sm"
+                onClick={handleAddLine}
+              >
+                <i className="bi bi-plus-circle me-1"></i>Add Line
+              </button>
             </div>
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label htmlFor={`account_id_${index}`} className="form-label">Account</label>
+          </div>
+          <div className="card-body p-0">
+            <div className="table-responsive">
+              <table className="table table-hover mb-0">
+                <thead className="table-light">
+                  <tr>
+                    <th style={{ width: '30%' }}>Account</th>
+                    <th style={{ width: '30%' }}>Description</th>
+                    <th style={{ width: '15%' }}>Debit</th>
+                    <th style={{ width: '15%' }}>Credit</th>
+                    <th style={{ width: '10%' }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {journalEntry.lines.map((line, index) => (
+                    <tr key={index}>
+                      <td>
+                        <select
+                          className={`form-select form-select-sm ${errors[`line_${index}_account_id`] ? 'is-invalid' : ''}`}
+                          value={line.account_id}
+                          onChange={(e) => handleLineChange(index, 'account_id', e.target.value)}
+                        >
+                          <option value="">Select Account</option>
+                          {accounts.map(account => (
+                            <option key={account.account_id} value={account.account_id}>
+                              {account.account_code} - {account.name}
+                            </option>
+                          ))}
+                        </select>
+                        {errors[`line_${index}_account_id`] && 
+                          <div className="invalid-feedback">{errors[`line_${index}_account_id`]}</div>}
+                      </td>
+                      <td>
+                        <textarea
+                          className={`form-control form-control-sm ${errors[`line_${index}_description`] ? 'is-invalid' : ''}`}
+                          value={line.description}
+                          onChange={(e) => handleLineChange(index, 'description', e.target.value)}
+                          placeholder="Enter line description..."
+                          rows="1"
+                          style={{ resize: 'none', height: '34px' }}
+                        />
+                        {errors[`line_${index}_description`] && 
+                          <div className="invalid-feedback">{errors[`line_${index}_description`]}</div>}
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          className={`form-control form-control-sm text-end ${errors[`line_${index}_debit`] ? 'is-invalid' : ''}`}
+                          value={line.debit}
+                          onChange={(e) => handleLineChange(index, 'debit', e.target.value)}
+                          placeholder="0.00"
+                          min="0"
+                          step="0.01"
+                        />
+                        {errors[`line_${index}_debit`] && 
+                          <div className="invalid-feedback">{errors[`line_${index}_debit`]}</div>}
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          className={`form-control form-control-sm text-end ${errors[`line_${index}_credit`] ? 'is-invalid' : ''}`}
+                          value={line.credit}
+                          onChange={(e) => handleLineChange(index, 'credit', e.target.value)}
+                          placeholder="0.00"
+                          min="0"
+                          step="0.01"
+                        />
+                        {errors[`line_${index}_credit`] && 
+                          <div className="invalid-feedback">{errors[`line_${index}_credit`]}</div>}
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="btn btn-outline-danger btn-sm"
+                          onClick={() => handleRemoveLine(index)}
+                          disabled={journalEntry.lines.length <= 2}
+                        >
+                          <i className="bi bi-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="table-secondary">
+                  <tr>
+                    <td colSpan="2" className="text-end fw-bold">Totals:</td>
+                    <td className="text-end fw-bold">
+                      <span className={`${getTotalDebits() !== getTotalCredits() ? 'text-danger' : 'text-success'}`}>
+                        ${getTotalDebits().toFixed(2)}
+                      </span>
+                    </td>
+                    <td className="text-end fw-bold">
+                      <span className={`${getTotalDebits() !== getTotalCredits() ? 'text-danger' : 'text-success'}`}>
+                        ${getTotalCredits().toFixed(2)}
+                      </span>
+                    </td>
+                    <td className="text-center">
+                      {getTotalDebits() === getTotalCredits() && getTotalDebits() > 0 ? (
+                        <i className="bi bi-check-circle-fill text-success" title="Balanced"></i>
+                      ) : (
+                        <i className="bi bi-exclamation-triangle-fill text-warning" title="Not Balanced"></i>
+                      )}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* TRANSACTION DETAILS SECTION - COMES BELOW LINES */}
+        <div className="card shadow-sm mb-4">
+          <div className="card-header bg-secondary text-white">
+            <h5 className="mb-0">
+              <i className="bi bi-file-text me-2"></i>Transaction Details
+            </h5>
+          </div>
+          <div className="card-body">
+            <div className="row mb-3">
+              <div className="col-md-6">
+                <label className="form-label fw-semibold">Transaction Number</label>
+                <input
+                  type="text"
+                  className={`form-control ${errors.transaction_no ? 'is-invalid' : ''}`}
+                  name="transaction_no"
+                  value={journalEntry.transaction_no}
+                  onChange={handleJournalEntryChange}
+                  placeholder="Leave blank for auto-generation"
+                />
+                {errors.transaction_no && <div className="invalid-feedback">{errors.transaction_no}</div>}
+              </div>
+              <div className="col-md-6">
+                <label className="form-label fw-semibold">Date <span className="text-danger">*</span></label>
+                <input
+                  type="date"
+                  className={`form-control ${errors.date ? 'is-invalid' : ''}`}
+                  name="date"
+                  value={journalEntry.date}
+                  onChange={handleJournalEntryChange}
+                  required
+                />
+                {errors.date && <div className="invalid-feedback">{errors.date}</div>}
+              </div>
+            </div>
+
+            <div className="row mb-3">
+              <div className="col-md-12">
+                <label className="form-label fw-semibold">Overall Description <span className="text-danger">*</span></label>
+                <textarea
+                  className={`form-control ${errors.description ? 'is-invalid' : ''}`}
+                  name="description"
+                  rows="2"
+                  value={journalEntry.description}
+                  onChange={handleJournalEntryChange}
+                  placeholder="Enter a brief description of the journal entry..."
+                  required
+                />
+                {errors.description && <div className="invalid-feedback">{errors.description}</div>}
+              </div>
+            </div>
+
+            <div className="row mb-3">
+              <div className="col-md-4">
+                <label className="form-label fw-semibold">Reference Number</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="reference_no"
+                  value={journalEntry.reference_no}
+                  onChange={handleJournalEntryChange}
+                  placeholder="e.g., INV-001, PAYMT-123"
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label fw-semibold">Added By <span className="text-danger">*</span></label>
                 <select
-                  className={`form-select ${errors.lines?.[index]?.account_id || errors.lines?.[index]?.account_id_invalid ? 'is-invalid' : ''}`}
-                  id={`account_id_${index}`}
-                  name="account_id"
-                  value={line.account_id}
-                  onChange={(e) => handleLineChange(index, e)}
-                  disabled={isEditMode} // Disabled in edit mode (account should not change for a recorded line)
+                  className={`form-select ${errors.addedby ? 'is-invalid' : ''}`}
+                  name="addedby"
+                  value={journalEntry.addedby}
+                  onChange={handleJournalEntryChange}
+                  required
                 >
-                  <option value="">Select Account</option>
-                  {accounts.map(acc => (
-                    <option key={acc.account_id} value={acc.account_id}>
-                      {acc.account_no} - {acc.name}
+                  <option value="">Select User</option>
+                  {users.map(user => (
+                    <option key={user.user_id} value={user.user_id}>
+                      {user.first_name} {user.last_name}
                     </option>
                   ))}
                 </select>
-                {errors.lines?.[index]?.account_id && <div className="invalid-feedback">{errors.lines[index].account_id}</div>}
-                {errors.lines?.[index]?.account_id_invalid && <div className="invalid-feedback">{errors.lines[index].account_id_invalid}</div>}
+                {errors.addedby && <div className="invalid-feedback">{errors.addedby}</div>}
               </div>
-              <div className="col-md-6 mb-3">
-                <label htmlFor={`amount_${index}`} className="form-label">Amount</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  className={`form-control ${errors.lines?.[index]?.amount ? 'is-invalid' : ''}`}
-                  id={`amount_${index}`}
-                  name="amount"
-                  value={line.amount}
-                  onChange={(e) => handleLineChange(index, e)}
-                  placeholder="e.g., 100.00"
-                />
-                {errors.lines?.[index]?.amount && <div className="invalid-feedback">{errors.lines[index].amount}</div>}
+              <div className="col-md-4">
+                <label className="form-label fw-semibold">Branch <span className="text-danger">*</span></label>
+                <select
+                  className={`form-select ${errors.branch_id ? 'is-invalid' : ''}`}
+                  name="branch_id"
+                  value={journalEntry.branch_id}
+                  onChange={handleJournalEntryChange}
+                  required
+                >
+                  <option value="">Select Branch</option>
+                  {branches.map(branch => (
+                    <option key={branch.branch_id} value={branch.branch_id}>
+                      {branch.name}
+                    </option>
+                  ))}
+                </select>
+                {errors.branch_id && <div className="invalid-feedback">{errors.branch_id}</div>}
               </div>
             </div>
+
             <div className="row">
-              <div className="col-md-6 mb-3">
-                <label htmlFor={`debit_${index}`} className="form-label">Debit</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  className={`form-control ${errors.lines?.[index]?.debitCredit || errors.lines?.[index]?.debitAmountMismatch ? 'is-invalid' : ''}`}
-                  id={`debit_${index}`}
-                  name="debit"
-                  value={line.debit}
-                  onChange={(e) => handleLineChange(index, e)}
-                  disabled={parseFloat(line.credit) > 0} // Disable if credit has a value
-                  placeholder="e.g., 100.00"
-                />
-                {errors.lines?.[index]?.debitCredit && <div className="invalid-feedback">{errors.lines[index].debitCredit}</div>}
-                {errors.lines?.[index]?.debitAmountMismatch && <div className="invalid-feedback">{errors.lines[index].debitAmountMismatch}</div>}
+              <div className="col-md-12">
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    name="is_posted"
+                    checked={journalEntry.is_posted}
+                    onChange={handleJournalEntryChange}
+                  />
+                  <label className="form-check-label">
+                    Post this journal entry immediately
+                  </label>
+                </div>
               </div>
-              <div className="col-md-6 mb-3">
-                <label htmlFor={`credit_${index}`} className="form-label">Credit</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  className={`form-control ${errors.lines?.[index]?.debitCredit || errors.lines?.[index]?.creditAmountMismatch ? 'is-invalid' : ''}`}
-                  id={`credit_${index}`}
-                  name="credit"
-                  value={line.credit}
-                  onChange={(e) => handleLineChange(index, e)}
-                  disabled={parseFloat(line.debit) > 0} // Disable if debit has a value
-                  placeholder="e.g., 100.00"
-                />
-                {errors.lines?.[index]?.debitCredit && <div className="invalid-feedback">{errors.lines[index].debitCredit}</div>}
-                {errors.lines?.[index]?.creditAmountMismatch && <div className="invalid-feedback">{errors.lines[index].creditAmountMismatch}</div>}
-              </div>
-            </div>
-            <div className="mb-3">
-              <label htmlFor={`line_description_${index}`} className="form-label">Line Description (Optional)</label>
-              <textarea
-                className="form-control"
-                id={`line_description_${index}`}
-                name="description"
-                rows="1"
-                value={line.description}
-                onChange={(e) => handleLineChange(index, e)}
-                placeholder="Specific details for this line item"
-              ></textarea>
             </div>
           </div>
-        ))}
-        {!isEditMode && ( // Only show "Add Another Line" in new entry mode
-            <button type="button" className="btn btn-outline-secondary w-100 mb-3" onClick={handleAddLine}>
-                <i className="bi bi-plus-circle me-2"></i> Add Another Line
+        </div>
+
+        {/* Submit Button */}
+        <div className="card shadow-sm">
+          <div className="card-body text-center">
+            <button
+              type="submit"
+              className="btn btn-primary btn-lg px-5"
+              disabled={isSubmitting || getTotalDebits() !== getTotalCredits() || getTotalDebits() === 0}
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                  {isEditMode ? 'Updating...' : 'Recording...'}
+                </>
+              ) : (
+                <>
+                  <i className="bi bi-check-circle me-2"></i>
+                  {isEditMode ? 'Update Journal Entry' : 'Record Journal Entry'}
+                </>
+              )}
             </button>
-        )}
-
-        {/* Balance Summary */}
-        {!isEditMode && ( // Only show balance summary for new Journal Entries
-        <div className="alert mt-4 p-3 text-center" role="alert" style={{backgroundColor: isBalanced ? '#d4edda' : '#f8d7da'}}>
-          <h5 className="mb-2">Balance Check</h5>
-          <p className="mb-1">Total Debits: <span className="fw-bold text-danger">${totalDebits.toFixed(2)}</span></p>
-          <p className="mb-1">Total Credits: <span className="fw-bold text-success">${totalCredits.toFixed(2)}</span></p>
-          {isBalanced ? (
-            <p className="fw-bold text-success mb-0"><i className="bi bi-check-circle-fill me-2"></i>Journal Entry is Balanced!</p>
-          ) : (
-            <p className="fw-bold text-danger mb-0"><i className="bi bi-x-circle-fill me-2"></i>Unbalanced! Difference: ${Math.abs(totalDebits - totalCredits).toFixed(2)}</p>
-          )}
-          {errors.balance && <div className="text-danger mt-2">{errors.balance}</div>}
-        </div>
-        )}
-      </div>
-
-      <div className="d-flex justify-content-end gap-2">
-        <button type="button" className="btn btn-secondary" onClick={() => setCurrentPage('transactions', null)}>
-          Cancel
-        </button>
-        <button type="submit" className={`btn btn-primary ${(!isBalanced && !isEditMode) ? 'disabled' : ''}`} disabled={(!isBalanced && !isEditMode)} onClick={handleSubmit}>
-          {isEditMode ? 'Save Line Changes' : 'Record Journal Entry'}
-        </button>
-      </div>
-
-      {/* Confirmation Modal (using Bootstrap classes for display) */}
-      {showConfirmation && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{display: 'block', backgroundColor: 'rgba(0,0,0,0.5)'}}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header bg-primary text-white">
-                <h5 className="modal-title">Confirm Journal Entry</h5>
-                <button type="button" className="btn-close btn-close-white" onClick={() => setShowConfirmation(false)} aria-label="Close"></button>
+            {getTotalDebits() !== getTotalCredits() && (
+              <div className="text-danger mt-2 small">
+                <i className="bi bi-exclamation-triangle me-1"></i>
+                Debits must equal credits before submitting
               </div>
-              <div className="modal-body">
-                <p>Are you sure you want to {isEditMode ? 'save changes to this transaction line' : 'record this Journal Entry'}?</p>
-                {!isEditMode && (
-                  <>
-                    <p className="fw-bold">Total Debits: <span className="text-danger">${totalDebits.toFixed(2)}</span></p>
-                    <p className="fw-bold">Total Credits: <span className="text-success">${totalCredits.toFixed(2)}</span></p>
-                  </>
-                )}
-                <p className="small text-muted">Ensure all details are correct. Once recorded and posted, this entry can only be corrected via a reversal.</p>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowConfirmation(false)}>Cancel</button>
-                <button type="button" className="btn btn-primary" onClick={confirmSubmit}>Confirm & {isEditMode ? 'Save' : 'Record'}</button>
-              </div>
-            </div>
+            )}
           </div>
         </div>
-      )}
+      </form>
     </div>
   );
 }
