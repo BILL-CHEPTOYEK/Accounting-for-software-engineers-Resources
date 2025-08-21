@@ -78,7 +78,7 @@ function ReportsPage() {
       const accountType = accountTypes.find(type => type.account_type_id === balance.account.account_type_id);
       const normalBalance = accountType?.normal_balance?.toLowerCase();
       
-      if (normalBalance === 'debit') {
+      if (normalBalance === 'dr' || normalBalance === 'debit') {
         balance.balance = balance.debitTotal - balance.creditTotal;
       } else {
         balance.balance = balance.creditTotal - balance.debitTotal;
@@ -149,7 +149,7 @@ function ReportsPage() {
                         .reduce((sum, t) => {
                           const accountType = accountTypes.find(type => type.account_type_id === balance.account.account_type_id);
                           const normalBalance = accountType?.normal_balance?.toLowerCase();
-                          if (normalBalance === 'debit') {
+                          if (normalBalance === 'dr' || normalBalance === 'debit') {
                             return sum + parseFloat(t.debit || 0) - parseFloat(t.credit || 0);
                           } else {
                             return sum + parseFloat(t.credit || 0) - parseFloat(t.debit || 0);
