@@ -4,6 +4,7 @@ const db = require('../models');
 const User = db.User;
 const Branch = db.Branch; 
 const bcrypt = require('bcryptjs');
+const { generateToken } = require('../middleware/auth');
 
 // Get all users
 exports.getAllUsers = async (req, res) => {
@@ -142,14 +143,20 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
+// Login user
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+    
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required.' });
     }
 
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({ 
+      where: { email },
+      include: [{ model: Branch, as: 'branch' }]
+    });
+    
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials.' });
     }
@@ -158,13 +165,98 @@ exports.loginUser = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid credentials.' });
     }
-    // jwt later
+
+    // Generate JWT token
+    const token = generateToken(user);
+    
+    // Prepare user response (exclude password)
     const userResponse = user.toJSON();
     delete userResponse.password_hash;
-    res.status(200).json({ message: 'Login successful', user: userResponse });
+
+    res.status(200).json({ 
+      message: 'Login successful', 
+      user: userResponse,
+      token: token 
+    });
 
   } catch (error) {
     console.error('Error in loginUser:', error);
     res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+};
+
+// Signup user (same as createUser but with token generation)
+exports.signupUser = async (req, res) => {
+  try {
+    const { email, password, first_name, last_name, role, branch_id } = req.body; 
+
+    // Basic validation
+    if (!email || !password || !first_name || !last_name) {
+      return res.status(400).json({ error: 'Email, password, first name, and last name are required.' });
+    }
+
+    // Use default branch if not provided
+    let finalBranchId = branch_id;
+    if (!finalBranchId) {
+      const defaultBranch = await Branch.findOne();
+      if (!defaultBranch) {
+        return res.status(400).json({ error: 'No branches available. Please create a branch first.' });
+      }
+      finalBranchId = defaultBranch.branch_id;
+    }
+
+    // Validate if branch_id exists
+    const existingBranch = await Branch.findByPk(finalBranchId);
+    if (!existingBranch) {
+      return res.status(400).json({ error: 'Invalid branch_id provided.' });
+    }
+    
+    // Validate and map role
+    const validRoles = ['Admin', 'Accountant', 'Employee'];
+    let finalRole = role || 'Employee';
+    
+    // Map lowercase to proper case
+    if (role) {
+      if (role.toLowerCase() === 'admin') finalRole = 'Admin';
+      else if (role.toLowerCase() === 'accountant') finalRole = 'Accountant';
+      else if (role.toLowerCase() === 'employee') finalRole = 'Employee';
+      else if (!validRoles.includes(role)) {
+        return res.status(400).json({ error: `Invalid role. Must be one of: ${validRoles.join(', ')}` });
+      }
+    }
+
+    // Hash the password before saving
+    const salt = await bcrypt.genSalt(10);
+    const password_hash = await bcrypt.hash(password, salt);
+
+    const newUser = await User.create({
+      email,
+      password_hash,
+      first_name,
+      last_name,
+      role: finalRole,
+      branch_id: finalBranchId
+    });
+
+    // Generate JWT token
+    const token = generateToken(newUser);
+
+    // Exclude password hash from the response
+    const userResponse = newUser.toJSON();
+    delete userResponse.password_hash;
+
+    res.status(201).json({
+      message: 'User registered successfully',
+      user: userResponse,
+      token: token
+    });
+  } catch (error) {
+    console.error('Error in signupUser:', error);
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(409).json({ error: 'Email already exists.' });
+    } else if (error.name === 'SequelizeForeignKeyConstraintError') {
+        return res.status(400).json({ error: 'Invalid branch ID provided.' });
+    }
+    res.status(400).json({ error: error.message || 'Bad Request' });
   }
 };
