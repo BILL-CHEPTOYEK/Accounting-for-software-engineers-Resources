@@ -185,7 +185,7 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-// Signup user (sam
+// Signup user (sa
 exports.signupUser = async (req, res) => {
   try {
     const { email, password, first_name, last_name, role, branch_id } = req.body; 
