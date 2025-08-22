@@ -185,7 +185,7 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-// Signup user (same as createUser but with to
+// Signup user (same as createUser but with t
 exports.signupUser = async (req, res) => {
   try {
     const { email, password, first_name, last_name, role, branch_id } = req.body; 
