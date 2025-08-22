@@ -103,7 +103,7 @@ function TransactionPage({ setCurrentPage }) { // Receive setCurrentPage for nav
               className="btn btn-primary btn-lg shadow-sm" 
               onClick={handleRecordNewJournalEntry}
             >
-              <i className="bi bi-plus-circle me-2"></i> Record New Journal Entry
+              <i className="bi bi-plus-circle me-2"></i> Record new Journal Entry
             </button>
           </div>
         </div>
