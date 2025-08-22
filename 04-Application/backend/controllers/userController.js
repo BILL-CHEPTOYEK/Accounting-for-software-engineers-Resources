@@ -185,7 +185,7 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-// Signup user (same as createUser but with toke
+// Signup user (same as createUser but with tok
 exports.signupUser = async (req, res) => {
   try {
     const { email, password, first_name, last_name, role, branch_id } = req.body; 
