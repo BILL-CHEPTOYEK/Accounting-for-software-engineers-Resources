@@ -169,7 +169,7 @@ exports.loginUser = async (req, res) => {
     // Generate JWT token
     const token = generateToken(user);
     
-    // Prepare user response (excludes password)
+    // Prepare user response (excludes password).
     const userResponse = user.toJSON();
     delete userResponse.password_hash;
 
