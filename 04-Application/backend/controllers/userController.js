@@ -25,7 +25,7 @@ exports.getUserById = async (req, res) => {
   try {
     const user = await User.findByPk(req.params.user_id, {
       attributes: { exclude: ['password_hash'] },
-      include: [{ model: Branch, as: 'branch' }] // Include associated Branch data
+      include: [{ model: Branch, as: 'branch' }] // Include associated Branch dat
     });
     if (user) {
       res.status(200).json(user);
