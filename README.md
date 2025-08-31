@@ -4,7 +4,7 @@ I’ve been there. You're building a system, let's say one that tracks company e
 
 That was my reality. I quickly realized that to build a robust financial system, I couldn't just write code; I had to learn accounting. With the guidance of a patient superior, I began to unravel the concepts of debits, credits, and the Chart of Accounts. It was a steep learning curve, made even steeper by the scarcity of resources that catered specifically to a software engineer's mindset. Most accounting guides were dense, full of jargon, and assumed a level of prior knowledge I just didn't have.
 
-This repository is the solution to that problem. I created this guide to bridge the gap between engineering and accounting. My goal is to simplify the learning process by providing clear, practical, and code-centric resources. This is the guide I wish I had when I started—a place where you can learn the "why" behind accounting principles and immediately see the "how" in code and database design.
+This repository is the solution to that problem. I created this guide to bridge the gap between engineering and accounting. My goal is to simplify the learning process by providing clear, practical, and code-centric resources. This is the guide I wish I had when I started—a place where you can learn the "why" behind accounting principles and immediately see the how in code and database design.
 
 ---
 
