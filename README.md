@@ -1,4 +1,4 @@
-# Accounting for Software Engineers: Resources 👨‍💻
+# Accounting for Software Engineers: Resources
 
 I’ve been there. You're building a system, let's say one that tracks company expenses, and it all seems straightforward at first. You create tables for expenses, users, and categories. But as the project grows, you start to hit walls. You need to handle reversals, categorize transactions correctly, and, most importantly, generate reports that actually make sense to the finance team. Every time you solve one problem, it feels like you've created another, often due to a lack of fundamental accounting knowledge.
 
