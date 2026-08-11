@@ -26,23 +26,23 @@ Forget what you think you know about debits and credits from your personal bank 
 
 The accounting universe is organized into five core categories. Understanding these is crucial because each type has a specific **Normal Balance**, which dictates whether a debit or a credit increases its value.
 
-* **Assets 💰**: These are things a company **owns** that have future economic value. Think of them as resources the business uses to operate.
+* **Assets**: These are things a company **owns** that have future economic value. Think of them as resources the business uses to operate.
     * **Examples:** Cash, Accounts Receivable (money owed to the company), Inventory, Equipment, Buildings.
     * **Normal Balance:** **Debit**. A debit **increases** an asset account, while a credit **decreases** it.
 
-* **Liabilities 💸**: These are amounts a company **owes** to external parties. They are obligations that need to be paid off in the future.
+* **Liabilities**: These are amounts a company **owes** to external parties. They are obligations that need to be paid off in the future.
     * **Examples:** Accounts Payable (money the company owes), Loans, Unearned Revenue (money received for services not yet performed).
     * **Normal Balance:** **Credit**. A credit **increases** a liability account, while a debit **decreases** it.
 
-* **Equity 📈**: This represents the **owner's claim** on the company's assets after all liabilities have been paid. It's what's left over for the owners.
+* **Equity**: This represents the **owner's claim** on the company's assets after all liabilities have been paid. It's what's left over for the owners.
     * **Examples:** Common Stock, Retained Earnings.
     * **Normal Balance:** **Credit**. A credit **increases** an equity account, while a debit **decreases** it.
 
-* **Revenue 💰**: These are funds earned from the company's primary business activities. They increase equity.
+* **Revenue**: These are funds earned from the company's primary business activities. They increase equity.
     * **Examples:** Sales Revenue, Service Revenue, Interest Income.
     * **Normal Balance:** **Credit**. A credit **increases** a revenue account, while a debit **decreases** it.
 
-* **Expenses 📉**: These are costs incurred by the company to generate revenue. They decrease equity.
+* **Expenses**: These are costs incurred by the company to generate revenue. They decrease equity.
     * **Examples:** Rent, Salaries, Utilities, Cost of Goods Sold.
     * **Normal Balance:** **Debit**. A debit **increases** an expense account, while a credit **decreases** it.
 
