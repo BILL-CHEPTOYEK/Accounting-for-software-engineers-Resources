@@ -19,6 +19,6 @@ This repository is the solution to that problem. I created this guide to bridge 
 
 ---
 
-### 🚀 Getting Started
+###  Getting Started
 
 Begin your journey by exploring the **[01-Foundations](01-Foundations/)** section. This will give you the necessary context to understand the database design and implementation that follows. Each section is designed to build on the previous one, guiding you from fundamental theory to a working application.
